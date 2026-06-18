@@ -1,7 +1,5 @@
 # AGENTS.md
 
-Guidance for AI agents (and humans) working in the **AgentSchool** repository.
-
 ## What This Is
 
 AgentSchool mines a coding agent's conversation sessions for a project, lets you
