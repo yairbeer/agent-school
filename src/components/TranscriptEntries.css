@@ -1,0 +1,7 @@
+/**
+ * Styling for individual transcript entry components
+ * This file is mostly handled by TranscriptRenderer.css,
+ * but we keep this for modular organization if needed
+ */
+
+/* All entry components inherit from .entry-* classes defined in TranscriptRenderer.css */

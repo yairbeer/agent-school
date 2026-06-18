@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+secrets.json
+
+# Caches
+.cache/
+.review-cache/
+.eslintcache
+
+# Editors / OS
+.pi/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# App-generated backups (never commit users' AGENTS.md backups)
+.agents_backups/
+AGENTS.md.bak.*
+
+# Product spec (kept local)
+PRD.md

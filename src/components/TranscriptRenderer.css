@@ -1,0 +1,506 @@
+/**
+ * Styling for TranscriptRenderer component
+ */
+
+.transcript-renderer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.transcript-renderer.empty-state {
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #fff;
+  border: 2px dashed #ddd;
+}
+
+.transcript-renderer.empty-state p {
+  color: #666;
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+.transcript-renderer.empty-state h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.transcript-renderer.empty-state .metadata {
+  margin-top: 20px;
+  text-align: left;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 4px;
+  max-width: 600px;
+  overflow: auto;
+}
+
+.transcript-renderer.empty-state .metadata-label {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.transcript-renderer.empty-state pre {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.transcript-header {
+  padding: 20px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.transcript-header h2 {
+  margin: 0 0 10px;
+  color: #333;
+  font-size: 20px;
+}
+
+.transcript-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #777;
+  flex-wrap: wrap;
+}
+
+.transcript-meta .timestamp {
+  font-family: monospace;
+}
+
+.transcript-meta .entry-count {
+  color: #666;
+}
+
+.transcript-meta .thinking-hidden-note {
+  color: #999;
+  font-style: italic;
+}
+
+.transcript-meta .warnings-badge {
+  background: #ffeaa7;
+  color: #d63031;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.entries-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.entry-wrapper {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border-left: 4px solid #ddd;
+  transition: all 0.2s ease;
+}
+
+.entry-wrapper.friction {
+  border-left-color: #d63031;
+  background: #fff5f5;
+}
+
+.entry-wrapper.user {
+  border-left-color: #0984e3;
+}
+
+.entry-wrapper.assistant {
+  border-left-color: #27ae60;
+}
+
+.entry-wrapper.assistant.error {
+  border-left-color: #d63031;
+  background: #fff5f5;
+}
+
+.entry-wrapper.thinking {
+  border-left-color: #9b59b6;
+}
+
+.entry-wrapper.toolCall {
+  border-left-color: #e17055;
+}
+
+.entry-wrapper.toolResult {
+  border-left-color: #f39c12;
+}
+
+.entry-wrapper.toolResult.error {
+  border-left-color: #d63031;
+  background: #fff5f5;
+}
+
+.entry-wrapper.bash {
+  border-left-color: #2d3436;
+}
+
+.entry-wrapper.bash.error {
+  border-left-color: #d63031;
+  background: #fff5f5;
+}
+
+.entry-header {
+  flex-shrink: 0;
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+}
+
+.entry-header .friction-badge {
+  color: #d63031;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.entry-header .entry-id-anchor {
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.entry-header .entry-id-anchor:hover {
+  background: #f0f0f0;
+  color: #0984e3;
+}
+
+.entry-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Entry-specific styles */
+
+.entry-user {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry-user.placeholder {
+  height: 60px;
+  background: linear-gradient(90deg, #e0e0e0 25%, transparent 25%, transparent 50%, #e0e0e0 50%, #e0e0e0 75%, transparent 75%, transparent);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.entry-user .role-label {
+  font-weight: bold;
+  color: #0984e3;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.entry-user .message-content {
+  color: #333;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.entry-user .message-content p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.entry-assistant,
+.entry-thinking,
+.entry-tool-call,
+.entry-tool-result,
+.entry-bash {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry-assistant.placeholder,
+.entry-thinking.placeholder,
+.entry-tool-call.placeholder,
+.entry-tool-result.placeholder,
+.entry-bash.placeholder {
+  height: 80px;
+  background: linear-gradient(90deg, #e0e0e0 25%, transparent 25%, transparent 50%, #e0e0e0 50%, #e0e0e0 75%, transparent 75%, transparent);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.role-label {
+  font-weight: bold;
+  font-size: 12px;
+  text-transform: uppercase;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.entry-assistant .role-label {
+  color: #27ae60;
+}
+
+.entry-assistant.error .role-label {
+  color: #d63031;
+}
+
+.entry-thinking .role-label {
+  color: #9b59b6;
+}
+
+.entry-tool-call .role-label {
+  color: #e17055;
+}
+
+.entry-tool-result .role-label {
+  color: #f39c12;
+}
+
+.entry-tool-result.error .role-label {
+  color: #d63031;
+}
+
+.entry-bash .role-label {
+  color: #2d3436;
+}
+
+.entry-bash.error .role-label {
+  color: #d63031;
+}
+
+.stop-reason {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #e8f4f8;
+  color: #0984e3;
+}
+
+.stop-reason.error {
+  background: #fff5f5;
+  color: #d63031;
+}
+
+.error-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #fff5f5;
+  color: #d63031;
+  font-weight: bold;
+}
+
+.exit-code {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  background: #e8f4f8;
+  color: #0984e3;
+}
+
+.exit-code.error {
+  background: #fff5f5;
+  color: #d63031;
+}
+
+.exit-code.success {
+  background: #e8f8f5;
+  color: #27ae60;
+}
+
+.message-content {
+  color: #333;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.message-content p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.thinking-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: inherit;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #9b59b6;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.thinking-toggle:hover {
+  opacity: 0.8;
+}
+
+.toggle-icon {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+}
+
+.thinking-content {
+  margin-top: 8px;
+  padding: 10px;
+  background: #f5e6ff;
+  border-radius: 4px;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+.thinking-content p {
+  margin: 0;
+}
+
+.tool-content,
+.result-content,
+.bash-output {
+  background: #f9f9f9;
+  border-radius: 4px;
+  padding: 10px;
+  overflow: auto;
+}
+
+.tool-args,
+.result-text,
+.bash-output pre {
+  margin: 0;
+  font-family: "Monaco", "Courier New", monospace;
+  font-size: 12px;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.4;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.bash-command {
+  font-family: "Monaco", "Courier New", monospace;
+  font-size: 12px;
+  background: #2d3436;
+  color: #00ff00;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+}
+
+.full-path {
+  font-size: 11px;
+  color: #777;
+  font-family: monospace;
+  margin: 8px 0 0;
+  padding: 8px;
+  background: #fff;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+}
+
+.expand-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #e8e8e8;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+  background: #d0d0d0;
+  border-color: #aaa;
+}
+
+.expand-btn:active {
+  background: #b8b8b8;
+}
+
+.transcript-warnings {
+  padding: 15px 20px;
+  background: #ffeaa7;
+  border-top: 1px solid #f5c563;
+  color: #d63031;
+  flex-shrink: 0;
+}
+
+.transcript-warnings h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.transcript-warnings ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.transcript-warnings li {
+  margin: 4px 0;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+  .transcript-header {
+    padding: 15px;
+  }
+
+  .transcript-header h2 {
+    font-size: 18px;
+  }
+
+  .transcript-meta {
+    font-size: 11px;
+  }
+
+  .entries-container {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .entry-wrapper {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .tool-args,
+  .result-text,
+  .bash-output pre {
+    font-size: 11px;
+  }
+}
