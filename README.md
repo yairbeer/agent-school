@@ -29,6 +29,9 @@ better instructions for the next session.
   - **(b)** where the **LLM took more than one try** and fixed itself,
   - **(c)** what was **learned** (for research tasks: the important steps and
     the requested output).
+- **🧩 LLM aggregation** — clusters the per-session findings into **recurring
+  issues** across sessions (frequency, severity, suggested rule), so repeated
+  problems stand out before they're written into `AGENTS.md`.
 - **📝 AGENTS.md suggestion** — before/after side-by-side diff editor; the
   "after" pane is editable and saveable, and the old `AGENTS.md` is backed up
   automatically on save.
@@ -58,7 +61,7 @@ npm run dev
 Then open http://localhost:5173 and click **“Try the demo”** on the first
 screen — no pi sessions of your own required. The demo loads two bundled
 example sessions and a sample `AGENTS.md` so you can walk the full
-Pick → Preview → Review → Propose flow end to end.
+Pick → Preview → Review → Aggregate → Propose flow end to end.
 
 **Stack:** TypeScript on Node.js · Vite + React front-end · Monaco diff editor ·
 LangChain.js LLM client (multi-provider) · npm.

@@ -7,6 +7,7 @@ import {
   ParsedSession,
   ConversationReview,
   AggregatedLessons,
+  AggregatedInsights,
   AgentsProposal,
 } from "./types.js";
 
@@ -75,6 +76,21 @@ export interface AggregateResponse {
 }
 
 /**
+ * POST /api/insights
+ * LLM-cluster the reviews into recurring issues across sessions.
+ * Request: { reviews: ConversationReview[], projectId?: string }
+ * Response: { insights: AggregatedInsights }
+ */
+export interface AggregateInsightsRequest {
+  reviews: ConversationReview[];
+  projectId?: string;
+}
+
+export interface AggregateInsightsResponse {
+  insights: AggregatedInsights;
+}
+
+/**
  * POST /api/agents/propose
  * Generate a proposed AGENTS.md from aggregated lessons
  * Request: { aggregatedLessons: AggregatedLessons, currentAgentsContent?: string }
@@ -83,6 +99,9 @@ export interface AggregateResponse {
 export interface ProposeAgentsRequest {
   aggregatedLessons: AggregatedLessons;
   currentAgentsContent?: string;
+  // Optional LLM-clustered recurring issues from the Aggregate step; when
+  // present they are prioritized in the proposal prompt.
+  insights?: AggregatedInsights;
 }
 
 export interface ProposeAgentsResponse {

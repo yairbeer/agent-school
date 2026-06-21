@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import type { editor } from "monaco-editor";
 import { DiffEditor, type Monaco } from "@monaco-editor/react";
 import { getAgents, saveAgents, aggregateSessions, proposeAgents } from "../api/client.js";
-import type { ConversationReview } from "../../shared/types.js";
+import type { ConversationReview, AggregatedInsights } from "../../shared/types.js";
 
 // IntelliJ "Darcula" palette for the Monaco diff editor.
 function defineDarcula(monaco: Monaco) {
@@ -39,6 +39,7 @@ function defineDarcula(monaco: Monaco) {
 interface EditStepProps {
   projectDir: string;
   reviews: ConversationReview[];
+  insights?: AggregatedInsights | null;
 }
 
 interface SaveResult {
@@ -53,7 +54,7 @@ interface ConflictWarning {
   proposedMtime?: number;
 }
 
-export function EditStep({ projectDir, reviews }: EditStepProps) {
+export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
   const [currentContent, setCurrentContent] = useState<string>("");
   const [editedContent, setEditedContent] = useState<string>("");
   const [currentMtime, setCurrentMtime] = useState<number | null>(null);
@@ -91,7 +92,8 @@ export function EditStep({ projectDir, reviews }: EditStepProps) {
         setLoadingStage("Generating proposed AGENTS.md... (this can take 1-2 minutes)");
         const proposeResponse = await proposeAgents(
           aggregateResponse.aggregated,
-          content
+          content,
+          insights ?? undefined
         );
         const proposed = proposeResponse.proposal.after;
 
@@ -116,6 +118,9 @@ export function EditStep({ projectDir, reviews }: EditStepProps) {
     return () => {
       mountedRef.current = false;
     };
+    // insights is captured once on mount alongside reviews; startedRef ensures
+    // a single run, so it intentionally isn't a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectDir, reviews]);
 
   const handleSave = async () => {

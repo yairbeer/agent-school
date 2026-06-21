@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { HealthResponse } from "../shared/api.js";
-import type { SessionSummary, ConversationReview } from "../shared/types.js";
+import type { SessionSummary, ConversationReview, AggregatedInsights } from "../shared/types.js";
 import { Wizard, type Step } from "./components/Wizard.js";
 import { ProjectPicker } from "./components/ProjectPicker.js";
 import { PreviewStep } from "./components/PreviewStep.js";
 import { ReviewStep } from "./components/ReviewStep.js";
+import { AggregateStep } from "./components/AggregateStep.js";
 import { EditStep } from "./components/EditStep.js";
 import "./App.css";
 
@@ -16,6 +17,7 @@ export default function App() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [reviews, setReviews] = useState<ConversationReview[]>([]);
+  const [insights, setInsights] = useState<AggregatedInsights | null>(null);
   // Exclude thinking blocks from the preview AND from what is sent to the LLM
   // for analysis. On by default.
   const [excludeThinking, setExcludeThinking] = useState(true);
@@ -39,6 +41,7 @@ export default function App() {
     setSessions(sessionList);
     setSelectedSessions(new Set());
     setReviews([]);
+    setInsights(null);
     setCurrentStep("preview");
   };
 
@@ -49,6 +52,7 @@ export default function App() {
       setSessions([]);
       setSelectedSessions(new Set());
       setReviews([]);
+      setInsights(null);
     }
     setCurrentStep(step);
   };
@@ -96,8 +100,16 @@ export default function App() {
           />
         )}
 
+        {currentStep === "aggregate" && reviews.length > 0 && (
+          <AggregateStep reviews={reviews} onInsightsReady={setInsights} />
+        )}
+
         {currentStep === "edit" && projectDir && (
-          <EditStep projectDir={projectDir} reviews={reviews} />
+          <EditStep
+            projectDir={projectDir}
+            reviews={reviews}
+            insights={insights}
+          />
         )}
       </Wizard>
 

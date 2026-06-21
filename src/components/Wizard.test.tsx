@@ -20,6 +20,7 @@ describe("Wizard", () => {
     expect(screen.getByText("Pick Project")).toBeInTheDocument();
     expect(screen.getByText("Preview")).toBeInTheDocument();
     expect(screen.getByText("Review")).toBeInTheDocument();
+    expect(screen.getByText("Aggregate")).toBeInTheDocument();
     expect(screen.getByText("Propose & Save")).toBeInTheDocument();
   });
 

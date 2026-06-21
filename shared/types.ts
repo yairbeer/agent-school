@@ -134,6 +134,30 @@ export interface AggregatedLessons {
 }
 
 /**
+ * A recurring theme found by the LLM across multiple sessions' findings.
+ * Produced by the Aggregate step (server/insightsAggregator.ts).
+ */
+export interface RepeatingIssue {
+  title: string; // short name of the recurring theme
+  description: string; // what the recurring issue is, in plain terms
+  category: string; // free-form theme label, e.g. "testing", "conventions"
+  severity: "minor" | "moderate" | "major";
+  occurrences: number; // how many findings/sessions it spans (>= 1)
+  sessionIds: string[]; // sessions where it appeared
+  suggestedAgentsRule?: string; // proposed durable rule for AGENTS.md
+}
+
+/**
+ * LLM-clustered view of the reviews: recurring issues + an overall summary.
+ */
+export interface AggregatedInsights {
+  projectId: string;
+  timestamp: number;
+  summary: string; // overall recurring-themes summary across sessions
+  repeatingIssues: RepeatingIssue[];
+}
+
+/**
  * Proposed AGENTS.md changes
  */
 export interface AgentsProposal {

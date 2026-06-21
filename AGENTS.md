@@ -62,6 +62,7 @@ server/                 Express API (ESM, tsx)
   sessionLoader.ts      discover/parse pi JSONL sessions; path <-> --path-- encoding;
                         __demo__ sentinel -> <repo>/demo; resolveProjectDir/resolveSessionsDirectory
   reviewEngine.ts       per-session LLM review (structured JSON/tool output); transcript builder
+  insightsAggregator.ts LLM-cluster reviews into recurring issues (the Aggregate step)
   aggregator.ts         combine reviews into AggregatedLessons
   agentsGenerator.ts    propose new AGENTS.md (plain markdown), read/save with backup
   llmFactory.ts         createLLM() for openai/anthropic/google/bedrock
@@ -72,10 +73,13 @@ src/                    React app
 demo/                   bundled demo: sessions/*.jsonl + AGENTS.md (the __demo__ project)
 ```
 
-### Wizard flow (4 steps)
-`Pick → Preview → Review → Propose & Save` (`src/types/wizard.ts`, `Wizard.tsx`).
-Sessions selected in Preview (`SessionList`, all selected by default) flow to
-Review; reviews flow to the Propose & Save step (`EditStep`).
+### Wizard flow (5 steps)
+`Pick → Preview → Review → Aggregate → Propose & Save` (`src/types/wizard.ts`,
+`Wizard.tsx`). Sessions selected in Preview (`SessionList`, all selected by
+default) flow to Review; per-session reviews flow to **Aggregate**
+(`AggregateStep` → `POST /api/insights` → `server/insightsAggregator.ts`), which
+LLM-clusters them into recurring issues; those `AggregatedInsights` flow into the
+Propose & Save step (`EditStep`) and are prioritized in the proposal prompt.
 
 ## Conventions
 

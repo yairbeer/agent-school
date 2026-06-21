@@ -18,6 +18,8 @@ import type {
   ReviewRequest,
   ReviewResponse,
   BrowseDirectoryResponse,
+  AggregateInsightsRequest,
+  AggregateInsightsResponse,
 } from "../shared/api.js";
 import {
   resolveSessionsDirectory,
@@ -27,6 +29,7 @@ import {
 import {
   aggregateLessons,
 } from "./aggregator.js";
+import { aggregateInsights } from "./insightsAggregator.js";
 import {
   AgentsGenerator,
   readCurrentAgents,
@@ -52,6 +55,30 @@ const LLM_PROVIDER =
 const AGENTS_TEMPERATURE = process.env.AGENTS_TEMPERATURE
   ? parseFloat(process.env.AGENTS_TEMPERATURE)
   : 0.7;
+
+// Lazily-created LLM for the Aggregate step (recurring-issue clustering).
+// Uses the same model/provider resolution as the propose step.
+let insightsLLM: BaseLanguageModel | null = null;
+async function getInsightsLLM(): Promise<BaseLanguageModel> {
+  if (insightsLLM) return insightsLLM;
+  const model = process.env.AGENTS_MODEL || process.env.REVIEW_MODEL || DEFAULT_MODEL;
+  const provider = (process.env.LLM_PROVIDER || process.env.REVIEW_PROVIDER) as
+    | "openai"
+    | "anthropic"
+    | "google"
+    | "bedrock"
+    | undefined;
+  console.log(
+    `[insights] LLM config: model=${model} provider=${provider ?? "(auto-detect)"}`
+  );
+  insightsLLM = await createLLM({
+    model,
+    provider,
+    temperature: AGENTS_TEMPERATURE,
+    maxTokens: 8192,
+  });
+  return insightsLLM;
+}
 
 let agentsGenerator: AgentsGenerator | null = null;
 async function getAgentsGenerator(): Promise<AgentsGenerator> {
@@ -396,13 +423,55 @@ app.post(
   }
 );
 
+// POST /api/insights
+// LLM-cluster the reviews into recurring issues across sessions.
+app.post(
+  "/api/insights",
+  async (req: Request, res: Response<AggregateInsightsResponse | ApiError>) => {
+    try {
+      const { reviews, projectId } = req.body as AggregateInsightsRequest;
+
+      if (!Array.isArray(reviews) || reviews.length === 0) {
+        return res.status(400).json({
+          error: "reviews is required",
+          code: "MISSING_REVIEWS",
+        });
+      }
+
+      const t0 = Date.now();
+      console.log(`[insights] start: reviews=${reviews.length}`);
+      const llm = await getInsightsLLM();
+      const insights = await aggregateInsights(
+        reviews,
+        llm,
+        projectId || "default"
+      );
+      console.log(
+        `[insights] done in ${((Date.now() - t0) / 1000).toFixed(1)}s ` +
+          `(${insights.repeatingIssues.length} recurring issues)`
+      );
+
+      return res.json({ insights });
+    } catch (err) {
+      console.error("[insights] FAILED:", err);
+      return res.status(500).json({
+        error: "Failed to aggregate insights",
+        code: "INSIGHTS_ERROR",
+        details: {
+          message: err instanceof Error ? err.message : "unknown error",
+        },
+      });
+    }
+  }
+);
+
 // POST /api/agents/propose
 // Generate a proposed AGENTS.md from aggregated lessons via meta LLM pass
 app.post(
   "/api/agents/propose",
   async (req: Request, res: Response<ProposeAgentsResponse | ApiError>) => {
     try {
-      const { aggregatedLessons, currentAgentsContent } =
+      const { aggregatedLessons, currentAgentsContent, insights } =
         req.body as ProposeAgentsRequest;
 
       if (!aggregatedLessons) {
@@ -418,11 +487,13 @@ app.post(
         `[propose] start: lessons=${aggregatedLessons.lessonsLearned?.length ?? 0} ` +
           `userFixes=${aggregatedLessons.userFixes?.length ?? 0} ` +
           `selfCorrections=${aggregatedLessons.selfCorrections?.length ?? 0} ` +
+          `repeatingIssues=${insights?.repeatingIssues?.length ?? 0} ` +
           `currentAgentsChars=${(currentAgentsContent || "").length}`
       );
       const proposal = await (await getAgentsGenerator()).generateProposal(
         aggregatedLessons,
-        currentAgentsContent || ""
+        currentAgentsContent || "",
+        insights
       );
       console.log(
         `[propose] done in ${((Date.now() - t0) / 1000).toFixed(1)}s ` +

@@ -10,6 +10,7 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import type {
   AggregatedLessons,
+  AggregatedInsights,
   AgentsProposal,
 } from "../shared/types.js";
 
@@ -87,19 +88,40 @@ Be specific and actionable. Do not add generic advice that isn't grounded in the
 }
 
 /**
+ * Format the LLM-clustered recurring issues so they are prioritized in the
+ * proposal. These come from the Aggregate step and represent the durable,
+ * repeated problems most worth encoding.
+ */
+function formatInsightsForPrompt(insights: AggregatedInsights): string {
+  if (!insights.repeatingIssues?.length) return "";
+  let out = "# Recurring issues (clustered across sessions — prioritize these)\n";
+  if (insights.summary) out += `${insights.summary}\n`;
+  insights.repeatingIssues.forEach((issue, idx) => {
+    out += `\n${idx + 1}. ${issue.title} (${issue.category}, ${issue.severity}, seen in ${issue.occurrences} session(s))\n`;
+    out += `   ${issue.description}\n`;
+    if (issue.suggestedAgentsRule) {
+      out += `   Suggested rule: ${issue.suggestedAgentsRule}\n`;
+    }
+  });
+  return out;
+}
+
+/**
  * User message: the concrete inputs (current AGENTS.md + the findings).
  */
 function buildUserMessage(
   existingAgents: string,
-  aggregated: AggregatedLessons
+  aggregated: AggregatedLessons,
+  insights?: AggregatedInsights
 ): string {
   const lessonsFormatted = formatLessonsForPrompt(aggregated);
+  const insightsFormatted = insights ? formatInsightsForPrompt(insights) : "";
 
   return `CURRENT AGENTS.md:
 ${existingAgents || "*(no existing AGENTS.md - starting fresh)"}
 
 ---
-
+${insightsFormatted ? `\n${insightsFormatted}\n---\n` : ""}
 ${lessonsFormatted}`;
 }
 
@@ -177,10 +199,11 @@ export class AgentsGenerator {
    */
   async generateProposal(
     aggregated: AggregatedLessons,
-    existingAgents: string = ""
+    existingAgents: string = "",
+    insights?: AggregatedInsights
   ): Promise<AgentsProposal> {
     const systemPrompt = buildSystemPrompt();
-    const userMessage = buildUserMessage(existingAgents, aggregated);
+    const userMessage = buildUserMessage(existingAgents, aggregated, insights);
     console.log(
       `[propose] prompt sizes: system=${systemPrompt.length} chars, user=${userMessage.length} chars (~${Math.round((systemPrompt.length + userMessage.length) / 4)} tokens)`
     );

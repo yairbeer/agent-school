@@ -113,7 +113,11 @@ describe("EditStep", () => {
 
       expect(client.getAgents).toHaveBeenCalledWith(mockProjectDir);
       expect(client.aggregateSessions).toHaveBeenCalledWith(mockReviews);
-      expect(client.proposeAgents).toHaveBeenCalledWith(expect.anything(), mockCurrentContent);
+      expect(client.proposeAgents).toHaveBeenCalledWith(
+        expect.anything(),
+        mockCurrentContent,
+        undefined
+      );
     });
 
     it("should handle empty current AGENTS.md gracefully", async () => {

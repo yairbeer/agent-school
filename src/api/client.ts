@@ -12,6 +12,8 @@ import type {
   ReviewResponse,
   AggregateRequest,
   AggregateResponse,
+  AggregateInsightsRequest,
+  AggregateInsightsResponse,
   GetAgentsResponse,
   ProposeAgentsRequest,
   ProposeAgentsResponse,
@@ -19,7 +21,12 @@ import type {
   SaveAgentsResponse,
   BrowseDirectoryResponse,
 } from "../../shared/api.js";
-import type { SessionSummary, AggregatedLessons, ConversationReview } from "../../shared/types.js";
+import type {
+  SessionSummary,
+  AggregatedLessons,
+  AggregatedInsights,
+  ConversationReview,
+} from "../../shared/types.js";
 
 // Use the current page origin in the browser so requests go through the Vite
 // dev proxy (and work in production where frontend + backend share an origin).
@@ -253,13 +260,33 @@ export async function getAgents(dir: string): Promise<GetAgentsResponse> {
 }
 
 /**
+ * LLM-cluster reviews into recurring issues (the Aggregate step).
+ */
+export async function aggregateInsights(
+  reviews: ConversationReview[],
+  projectId?: string
+): Promise<AggregateInsightsResponse> {
+  const url = new URL(`${API_BASE}/api/insights`);
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reviews, projectId } as AggregateInsightsRequest),
+  });
+
+  return readJson<AggregateInsightsResponse>(res, "INSIGHTS_FAILED");
+}
+
+/**
  * Propose new AGENTS.md from aggregated lessons
  * @param aggregatedLessons - aggregated lessons from all reviews
  * @param currentAgentsContent - current AGENTS.md content (optional)
+ * @param insights - LLM-clustered recurring issues (optional, prioritized)
  */
 export async function proposeAgents(
   aggregatedLessons: AggregatedLessons,
-  currentAgentsContent?: string
+  currentAgentsContent?: string,
+  insights?: AggregatedInsights
 ): Promise<ProposeAgentsResponse> {
   const url = new URL(`${API_BASE}/api/agents/propose`);
 
@@ -268,6 +295,7 @@ export async function proposeAgents(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       aggregatedLessons,
+      insights,
       currentAgentsContent,
     } as ProposeAgentsRequest),
   });
