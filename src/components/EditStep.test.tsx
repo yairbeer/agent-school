@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { ChangeEvent } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EditStep } from "./EditStep";
@@ -22,7 +23,15 @@ vi.mock("../api/client", () => ({
 vi.mock("@monaco-editor/react", async () => {
   const React = await import("react");
   return {
-    DiffEditor: ({ original, modified, onMount }: any) => {
+    DiffEditor: ({
+      original,
+      modified,
+      onMount,
+    }: {
+      original: string;
+      modified: string;
+      onMount?: (editor: unknown) => void;
+    }) => {
       const valueRef = React.useRef(modified);
       const cbRef = React.useRef<null | (() => void)>(null);
       valueRef.current = modified;
@@ -44,7 +53,7 @@ vi.mock("@monaco-editor/react", async () => {
           <textarea
             data-testid="modified-editor"
             value={modified}
-            onChange={(e: any) => {
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
               valueRef.current = e.target.value;
               cbRef.current?.();
             }}
@@ -93,7 +102,7 @@ describe("EditStep", () => {
         confidence: 0.8,
         prompt: { system: "SYSTEM-PROMPT-TEXT", user: "USER-MESSAGE-TEXT" },
       },
-    } as any);
+    });
   };
 
   beforeEach(() => {

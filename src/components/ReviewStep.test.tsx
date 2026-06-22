@@ -15,7 +15,7 @@ vi.mock("../api/client.js", () => ({
 
 import * as clientModule from "../api/client.js";
 
-const mockReviewSession = clientModule.reviewSession as any;
+const mockReviewSession = vi.mocked(clientModule.reviewSession);
 
 describe("ReviewStep", () => {
   const mockSessions: SessionSummary[] = [

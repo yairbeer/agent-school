@@ -54,9 +54,15 @@ class ApiError extends Error {
  * input" when the body is empty or non-JSON (e.g. the backend crashed or the
  * proxy dropped the connection).
  */
+interface JsonErrorBody {
+  error?: string;
+  code?: string;
+  details?: { message?: string };
+}
+
 async function readJson<T>(res: Response, fallbackCode: string): Promise<T> {
   const text = await res.text();
-  let body: any = null;
+  let body: JsonErrorBody | null = null;
   if (text) {
     try {
       body = JSON.parse(text);
@@ -81,7 +87,7 @@ async function readJson<T>(res: Response, fallbackCode: string): Promise<T> {
       `Empty or non-JSON response from server (HTTP ${res.status})`
     );
   }
-  return body as T;
+  return body as unknown as T;
 }
 
 /**

@@ -68,7 +68,6 @@ export function TranscriptRenderer({
     [entriesWithFriction]
   );
   // Simple intersection observer for virtualization
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -99,6 +98,9 @@ export function TranscriptRenderer({
       entryElements.forEach((el) => observer.unobserve(el));
       observer.disconnect();
     };
+    // visibleEntries is intentionally read but excluded from deps: re-running
+    // on every visibility change would recreate the observer each scroll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entriesWithFriction]);
 
   const toggleExpanded = (entryId: string) => {
@@ -239,18 +241,3 @@ export function TranscriptRenderer({
   );
 }
 
-/**
- * Hook for scrolling to transcript entries (for review findings)
- */
-export function useTranscriptScrollTo() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const scrollToEntry = (entryId: string) => {
-    const element = containerRef.current?.querySelector(`[data-entry-id="${entryId}"]`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  return { containerRef, scrollToEntry };
-}
