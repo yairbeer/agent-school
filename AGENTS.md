@@ -131,6 +131,8 @@ Propose & Save step (`EditStep`) and are prioritized in the proposal prompt.
 
 ## Git / Safety
 
+- **Never work directly on `main`.** Create a branch per feature (e.g.
+  `feature/<short-description>`) and open changes from there.
 - Don't commit secrets. `.env`, `.review-cache/`, `.pi/`, `dist/`, `node_modules/`,
   `PRD.md`, and AGENTS backups are gitignored.
 - AGENTS.md saves are atomic and create a timestamped backup under
