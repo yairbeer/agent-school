@@ -59,6 +59,8 @@ export function EditStep({ projectDir, agent, reviews, insights }: EditStepProps
   // The conventions file differs per agent: pi uses AGENTS.md, Claude Code
   // uses CLAUDE.md. Used for all user-facing copy and persisted to the server.
   const fileLabel = agent === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
+  // The bundled demo proposes from mock fixtures (no LLM).
+  const isDemo = projectDir === "__demo__";
   const [currentContent, setCurrentContent] = useState<string>("");
   const [editedContent, setEditedContent] = useState<string>("");
   const [currentMtime, setCurrentMtime] = useState<number | null>(null);
@@ -97,7 +99,8 @@ export function EditStep({ projectDir, agent, reviews, insights }: EditStepProps
         const proposeResponse = await proposeAgents(
           aggregateResponse.aggregated,
           content,
-          insights ?? undefined
+          insights ?? undefined,
+          isDemo
         );
         const proposed = proposeResponse.proposal.after;
 

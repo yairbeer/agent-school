@@ -284,14 +284,15 @@ export async function getAgents(dir: string, agent: AgentType = "pi"): Promise<G
  */
 export async function aggregateInsights(
   reviews: ConversationReview[],
-  projectId?: string
+  projectId?: string,
+  demo?: boolean
 ): Promise<AggregateInsightsResponse> {
   const url = new URL(`${API_BASE}/api/insights`);
 
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reviews, projectId } as AggregateInsightsRequest),
+    body: JSON.stringify({ reviews, projectId, demo } as AggregateInsightsRequest),
   });
 
   return readJson<AggregateInsightsResponse>(res, "INSIGHTS_FAILED");
@@ -306,7 +307,8 @@ export async function aggregateInsights(
 export async function proposeAgents(
   aggregatedLessons: AggregatedLessons,
   currentAgentsContent?: string,
-  insights?: AggregatedInsights
+  insights?: AggregatedInsights,
+  demo?: boolean
 ): Promise<ProposeAgentsResponse> {
   const url = new URL(`${API_BASE}/api/agents/propose`);
 
@@ -317,6 +319,7 @@ export async function proposeAgents(
       aggregatedLessons,
       insights,
       currentAgentsContent,
+      demo,
     } as ProposeAgentsRequest),
   });
 

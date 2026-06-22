@@ -106,7 +106,11 @@ export default function App() {
         )}
 
         {currentStep === "aggregate" && reviews.length > 0 && (
-          <AggregateStep reviews={reviews} onInsightsReady={setInsights} />
+          <AggregateStep
+            reviews={reviews}
+            onInsightsReady={setInsights}
+            demo={projectDir === "__demo__"}
+          />
         )}
 
         {currentStep === "edit" && projectDir && (

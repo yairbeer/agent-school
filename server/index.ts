@@ -31,6 +31,13 @@ import {
 } from "./aggregator.js";
 import { aggregateInsights } from "./insightsAggregator.js";
 import {
+  isDemoDir,
+  isDemoProject,
+  getDemoReview,
+  getDemoInsights,
+  getDemoProposal,
+} from "./demoFixtures.js";
+import {
   AgentsGenerator,
   readCurrentAgents,
   getAgentsMtime,
@@ -333,6 +340,17 @@ app.post(
         });
       }
 
+      // Demo mode: return a bundled mock review so the full pipeline works
+      // offline (no LLM/credentials required).
+      if (isDemoDir(dir)) {
+        const demoReview = getDemoReview(sessionSummary.filePath, sessionId);
+        if (demoReview) {
+          const result = { review: demoReview, cached: true };
+          reviewCache.set(sessionId, result);
+          return res.json(result);
+        }
+      }
+
       // Use the first branch (leaf/active branch)
       let activeBranch = parsedSession.branches[0];
 
@@ -438,6 +456,15 @@ app.post(
         });
       }
 
+      // Demo mode: derive recurring issues from bundled fixtures (no LLM).
+      if (isDemoProject(projectId)) {
+        const insights = getDemoInsights(reviews, projectId || "__demo__");
+        console.log(
+          `[insights] demo fixtures (${insights.repeatingIssues.length} recurring issues)`
+        );
+        return res.json({ insights });
+      }
+
       const t0 = Date.now();
       console.log(`[insights] start: reviews=${reviews.length}`);
       const llm = await getInsightsLLM();
@@ -471,7 +498,7 @@ app.post(
   "/api/agents/propose",
   async (req: Request, res: Response<ProposeAgentsResponse | ApiError>) => {
     try {
-      const { aggregatedLessons, currentAgentsContent, insights } =
+      const { aggregatedLessons, currentAgentsContent, insights, demo } =
         req.body as ProposeAgentsRequest;
 
       if (!aggregatedLessons) {
@@ -479,6 +506,14 @@ app.post(
           error: "aggregatedLessons is required",
           code: "MISSING_AGGREGATED_LESSONS",
         });
+      }
+
+      // Demo mode: return a bundled mock proposal so the demo proposes a real
+      // before/after diff offline (no LLM/credentials required).
+      if (demo) {
+        const proposal = getDemoProposal(currentAgentsContent || "");
+        console.log(`[propose] demo fixtures (output ${proposal.after.length} chars)`);
+        return res.json({ proposal });
       }
 
       // Generate proposal using the meta LLM (lazily initialized)

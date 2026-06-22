@@ -15,9 +15,12 @@ import "./AggregateStep.css";
 interface AggregateStepProps {
   reviews: ConversationReview[];
   onInsightsReady: (insights: AggregatedInsights) => void;
+  // True for the bundled demo project — the server returns mock recurring
+  // issues instead of calling the LLM.
+  demo?: boolean;
 }
 
-export function AggregateStep({ reviews, onInsightsReady }: AggregateStepProps) {
+export function AggregateStep({ reviews, onInsightsReady, demo }: AggregateStepProps) {
   const [insights, setInsights] = useState<AggregatedInsights | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +31,11 @@ export function AggregateStep({ reviews, onInsightsReady }: AggregateStepProps) 
     try {
       setIsLoading(true);
       setError(null);
-      const { insights: result } = await aggregateInsights(reviews);
+      const { insights: result } = await aggregateInsights(
+        reviews,
+        demo ? "__demo__" : undefined,
+        demo
+      );
       if (!mountedRef.current) return;
       setInsights(result);
       onInsightsReady(result);

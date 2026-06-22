@@ -116,7 +116,8 @@ describe("EditStep", () => {
       expect(client.proposeAgents).toHaveBeenCalledWith(
         expect.anything(),
         mockCurrentContent,
-        undefined
+        undefined,
+        false
       );
     });
 

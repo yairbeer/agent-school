@@ -85,6 +85,9 @@ export interface AggregateResponse {
 export interface AggregateInsightsRequest {
   reviews: ConversationReview[];
   projectId?: string;
+  // When true (the bundled __demo__ project), the server returns mock
+  // recurring issues instead of calling the LLM.
+  demo?: boolean;
 }
 
 export interface AggregateInsightsResponse {
@@ -103,6 +106,9 @@ export interface ProposeAgentsRequest {
   // Optional LLM-clustered recurring issues from the Aggregate step; when
   // present they are prioritized in the proposal prompt.
   insights?: AggregatedInsights;
+  // When true (the bundled __demo__ project), the server returns a mock
+  // proposal instead of calling the LLM.
+  demo?: boolean;
 }
 
 export interface ProposeAgentsResponse {

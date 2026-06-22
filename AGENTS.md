@@ -141,6 +141,12 @@ Propose & Save step (`EditStep`) and are prioritized in the proposal prompt.
 
 - Project sentinel `__demo__` resolves to `<repo>/demo` (`resolveProjectDir`),
   with sessions in `demo/sessions/*.jsonl` and a sample `demo/AGENTS.md`.
+- **The demo runs the full pipeline offline with NO LLM.** Review, Aggregate
+  (insights) and Propose are served from bundled mock fixtures
+  (`server/demoFixtures.ts`), gated by the `__demo__` dir / `demo` request flag.
+  Reviews are keyed by session file basename (the frontend id is a path hash);
+  insights are derived deterministically from the supplied reviews. Don't route
+  the demo through the real LLM.
 - Demo content is fully synthetic/generic — keep it that way (no real names,
   hosts, keys, customer IDs, or personal paths).
 
