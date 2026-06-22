@@ -6,7 +6,11 @@
 AgentSchool ingests a coding agent's conversation sessions for a
 project, lets you preview them, uses an LLM to review each conversation and
 extract **structured lessons learned**, and then proposes an improved
-`AGENTS.md` for the project.
+conventions file for the project.
+
+It works with sessions from both **pi** (`~/.pi/agent/sessions`, `AGENTS.md`)
+and **Claude Code** (`~/.claude/projects`, `CLAUDE.md`). You pick the agent in
+the first step; the rest of the pipeline is agent-agnostic.
 
 It closes the feedback loop: raw agent transcripts → structured insights →
 better instructions for the next session.
@@ -19,8 +23,9 @@ better instructions for the next session.
 
 ## Features
 
-- **📂 Session discovery** — finds pi sessions for a project directory
-  (`~/.pi/agent/sessions/--<path>--/*.jsonl`).
+- **📂 Session discovery** — finds sessions for a project directory from either
+  pi (`~/.pi/agent/sessions/--<path>--/*.jsonl`) or Claude Code
+  (`~/.claude/projects/<encoded-path>/*.jsonl`).
 - **👀 Preview** — readable transcripts with collapsible thinking/tool blocks
   and automatic flagging of friction turns (tool errors, non-zero exits).
 - **🔍 Structured LLM review** — per conversation, enforced via a tool/JSON
@@ -32,14 +37,15 @@ better instructions for the next session.
 - **🧩 LLM aggregation** — clusters the per-session findings into **recurring
   issues** across sessions (frequency, severity, suggested rule), so repeated
   problems stand out before they're written into `AGENTS.md`.
-- **📝 AGENTS.md suggestion** — before/after side-by-side diff editor; the
-  "after" pane is editable and saveable, and the old `AGENTS.md` is backed up
+- **📝 Conventions suggestion** — before/after side-by-side diff editor for the
+  project's conventions file (`AGENTS.md` for pi, `CLAUDE.md` for Claude Code);
+  the "after" pane is editable and saveable, and the old file is backed up
   automatically on save.
 
 ## Status
 
 🚧 Early development. Try it instantly with the bundled demo (**“Try the
-demo”** button), or point it at your own pi project directory.
+demo”** button), or point it at your own pi or Claude Code project directory.
 
 ## Quick start
 
@@ -60,7 +66,7 @@ npm run dev
 ```
 
 Then open http://localhost:5173 and click **“Try the demo”** on the first
-screen — no pi sessions of your own required, **and no LLM provider needed**.
+screen — no sessions of your own required, **and no LLM provider needed**.
 The demo loads bundled example sessions and a sample `AGENTS.md`, and the
 Review / Aggregate / Propose steps are served from bundled mock fixtures, so
 you can walk the full Pick → Preview → Review → Aggregate → Propose flow end
@@ -90,7 +96,7 @@ auto-detected from the model name, or set `LLM_PROVIDER` explicitly.
 Key variables:
 
 - `REVIEW_MODEL` — model used to review each session (and, by default, to
-  propose the new `AGENTS.md`).
+  propose the new conventions file).
 - `AGENTS_MODEL` / `AGENTS_MAX_TOKENS` — optionally use a different/larger model
   and output budget just for the proposal step.
 - `PORT` — backend port (default `3001`).
@@ -100,11 +106,20 @@ The backend prints its effective config on startup, e.g.
 
 ## How it works
 
-Pi stores sessions as JSONL trees under
-`~/.pi/agent/sessions/--<path-with-slashes-as-dashes>--/`. This tool parses
-those files, reconstructs the active conversation branch, and feeds it to an
-LLM that returns structured findings. See the
-[pi session format docs](https://github.com/earendil-works/pi-mono).
+Both supported agents store sessions as JSONL files, and AgentSchool parses
+them, reconstructs the active conversation branch, and feeds it to an LLM that
+returns structured findings.
+
+- **pi** stores sessions as JSONL trees under
+  `~/.pi/agent/sessions/--<path-with-slashes-as-dashes>--/`. See the
+  [pi session format docs](https://github.com/earendil-works/pi-mono).
+- **Claude Code** stores sessions under `~/.claude/projects/<encoded-path>/`.
+  Its path encoding is lossy (every non-alphanumeric char becomes `-`), so the
+  project directory (`cwd`) is read from inside the session file rather than
+  decoded from the folder name.
+
+The agent is chosen in the first wizard step, and the conventions file follows
+the agent: `AGENTS.md` for pi, `CLAUDE.md` for Claude Code.
 
 ## Contributing
 
