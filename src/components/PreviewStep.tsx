@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from "react";
-import type { SessionSummary, ParsedSession } from "../../shared/types.js";
+import type { SessionSummary, ParsedSession, AgentType } from "../../shared/types.js";
 import { loadSession } from "../api/client.js";
 import { SessionList } from "./SessionList.js";
 import { TranscriptRenderer } from "./TranscriptRenderer.js";
@@ -11,6 +11,7 @@ import "./PreviewStep.css";
 
 interface PreviewStepProps {
   projectDir: string;
+  agent: AgentType;
   sessions: SessionSummary[];
   onSelectChange: (selected: Set<string>) => void;
   excludeThinking?: boolean;
@@ -19,6 +20,7 @@ interface PreviewStepProps {
 
 export function PreviewStep({
   projectDir,
+  agent,
   sessions,
   onSelectChange,
   excludeThinking,
@@ -41,7 +43,7 @@ export function PreviewStep({
     setPreviewError(null);
 
     // Call API to get the full parsed session (dir is required by the backend)
-    loadSession(selectedSessionId, projectDir)
+    loadSession(selectedSessionId, projectDir, agent)
       .then((session) => {
         setPreviewSession(session);
         setIsLoadingPreview(false);
@@ -50,7 +52,7 @@ export function PreviewStep({
         setPreviewError(err instanceof Error ? err.message : "Unknown error");
         setIsLoadingPreview(false);
       });
-  }, [selectedSessionId, projectDir]);
+  }, [selectedSessionId, projectDir, agent]);
 
   return (
     <div className="preview-step">

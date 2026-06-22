@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { HealthResponse } from "../shared/api.js";
-import type { SessionSummary, ConversationReview, AggregatedInsights } from "../shared/types.js";
+import type { SessionSummary, ConversationReview, AggregatedInsights, AgentType } from "../shared/types.js";
 import { Wizard, type Step } from "./components/Wizard.js";
 import { ProjectPicker } from "./components/ProjectPicker.js";
 import { PreviewStep } from "./components/PreviewStep.js";
@@ -14,6 +14,7 @@ export default function App() {
   const [healthError, setHealthError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<Step>("pick");
   const [projectDir, setProjectDir] = useState<string | null>(null);
+  const [agent, setAgent] = useState<AgentType>("pi");
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [reviews, setReviews] = useState<ConversationReview[]>([]);
@@ -36,8 +37,9 @@ export default function App() {
       });
   }, []);
 
-  const handleProjectSelected = (dir: string, sessionList: SessionSummary[]) => {
+  const handleProjectSelected = (dir: string, selectedAgent: AgentType, sessionList: SessionSummary[]) => {
     setProjectDir(dir);
+    setAgent(selectedAgent);
     setSessions(sessionList);
     setSelectedSessions(new Set());
     setReviews([]);
@@ -49,6 +51,7 @@ export default function App() {
     if (step === "pick") {
       // Resetting wizard
       setProjectDir(null);
+      setAgent("pi");
       setSessions([]);
       setSelectedSessions(new Set());
       setReviews([]);
@@ -82,6 +85,7 @@ export default function App() {
         {currentStep === "preview" && sessions.length > 0 && (
           <PreviewStep
             projectDir={projectDir || ""}
+            agent={agent}
             sessions={sessions}
             onSelectChange={setSelectedSessions}
             excludeThinking={excludeThinking}
@@ -93,6 +97,7 @@ export default function App() {
           <ReviewStep
             sessions={sessions.filter((s) => selectedSessions.has(s.id))}
             projectDir={projectDir}
+            agent={agent}
             excludeThinking={excludeThinking}
             onReviewsComplete={(newReviews) => {
               setReviews(newReviews);
@@ -107,6 +112,7 @@ export default function App() {
         {currentStep === "edit" && projectDir && (
           <EditStep
             projectDir={projectDir}
+            agent={agent}
             reviews={reviews}
             insights={insights}
           />

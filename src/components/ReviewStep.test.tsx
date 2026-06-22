@@ -77,7 +77,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -88,7 +88,7 @@ describe("ReviewStep", () => {
 
   it("displays empty state when no sessions selected", () => {
     render(
-      <ReviewStep sessions={[]} projectDir="/test/project" onReviewsComplete={vi.fn()} />
+      <ReviewStep sessions={[]} projectDir="/test/project" agent="pi" onReviewsComplete={vi.fn()} />
     );
 
     expect(
@@ -102,7 +102,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={onComplete}
       />
     );
@@ -119,7 +119,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -138,7 +138,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -156,7 +156,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -174,7 +174,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -206,7 +206,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -222,7 +222,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -234,7 +234,7 @@ describe("ReviewStep", () => {
     fireEvent.click(screen.getByText(/Review 1 session/));
 
     await waitFor(() => {
-      expect(mockReviewSession).toHaveBeenCalledWith("session-1", true, "/test/project", undefined);
+      expect(mockReviewSession).toHaveBeenCalledWith("session-1", true, "/test/project", undefined, "pi");
     });
   });
 
@@ -242,7 +242,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );
@@ -259,7 +259,7 @@ describe("ReviewStep", () => {
     render(
       <ReviewStep
         sessions={mockSessions}
-        projectDir="/test/project"
+        projectDir="/test/project" agent="pi"
         onReviewsComplete={vi.fn()}
       />
     );

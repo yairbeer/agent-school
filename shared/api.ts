@@ -9,6 +9,7 @@ import {
   AggregatedLessons,
   AggregatedInsights,
   AgentsProposal,
+  AgentType,
 } from "./types.js";
 
 /**
@@ -135,6 +136,8 @@ export interface SaveAgentsRequest {
   dir: string;
   content: string;
   expectedMtime?: number;
+  // Which agent's conventions file to write (AGENTS.md vs CLAUDE.md).
+  agent?: AgentType;
 }
 
 export interface SaveAgentsResponse {

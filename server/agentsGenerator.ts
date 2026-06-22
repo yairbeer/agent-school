@@ -12,6 +12,7 @@ import type {
   AggregatedLessons,
   AggregatedInsights,
   AgentsProposal,
+  AgentType,
 } from "../shared/types.js";
 
 /**
@@ -268,10 +269,18 @@ export class AgentsGenerator {
 }
 
 /**
- * Read current AGENTS.md from a project directory
+ * Conventions filename for a given agent. pi reads/writes AGENTS.md; Claude
+ * Code uses CLAUDE.md. Defaults to AGENTS.md to preserve existing behavior.
  */
-export function readCurrentAgents(projectDir: string): string {
-  const agentsPath = path.join(resolveProjectDir(projectDir), "AGENTS.md");
+export function agentsFileName(agent: AgentType = "pi"): string {
+  return agent === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
+}
+
+/**
+ * Read current conventions file (AGENTS.md / CLAUDE.md) from a project dir
+ */
+export function readCurrentAgents(projectDir: string, agent: AgentType = "pi"): string {
+  const agentsPath = path.join(resolveProjectDir(projectDir), agentsFileName(agent));
 
   if (!fs.existsSync(agentsPath)) {
     return "";
@@ -280,16 +289,16 @@ export function readCurrentAgents(projectDir: string): string {
   try {
     return fs.readFileSync(agentsPath, "utf-8");
   } catch (err) {
-    console.error(`Failed to read AGENTS.md: ${err}`);
+    console.error(`Failed to read ${agentsFileName(agent)}: ${err}`);
     return "";
   }
 }
 
 /**
- * Get modification time of AGENTS.md
+ * Get modification time of the conventions file
  */
-export function getAgentsMtime(projectDir: string): number | null {
-  const agentsPath = path.join(resolveProjectDir(projectDir), "AGENTS.md");
+export function getAgentsMtime(projectDir: string, agent: AgentType = "pi"): number | null {
+  const agentsPath = path.join(resolveProjectDir(projectDir), agentsFileName(agent));
 
   if (!fs.existsSync(agentsPath)) {
     return null;
@@ -299,18 +308,19 @@ export function getAgentsMtime(projectDir: string): number | null {
     const stats = fs.statSync(agentsPath);
     return stats.mtimeMs;
   } catch (err) {
-    console.error(`Failed to get AGENTS.md mtime: ${err}`);
+    console.error(`Failed to get ${agentsFileName(agent)} mtime: ${err}`);
     return null;
   }
 }
 
 /**
- * Save AGENTS.md with atomic write and backup
+ * Save the conventions file with atomic write and backup
  */
 export function saveAgents(
   projectDir: string,
   content: string,
-  expectedMtime?: number
+  expectedMtime?: number,
+  agent: AgentType = "pi"
 ): {
   success: boolean;
   mtime: number;
@@ -319,16 +329,17 @@ export function saveAgents(
 } {
   try {
     const resolvedDir = resolveProjectDir(projectDir);
-    const agentsPath = path.join(resolvedDir, "AGENTS.md");
+    const fileName = agentsFileName(agent);
+    const agentsPath = path.join(resolvedDir, fileName);
     const backupDir = path.join(resolvedDir, ".agents_backups");
 
     if (expectedMtime !== undefined) {
-      const currentMtime = getAgentsMtime(projectDir);
+      const currentMtime = getAgentsMtime(projectDir, agent);
       if (currentMtime !== null && currentMtime !== expectedMtime) {
         return {
           success: false,
           mtime: 0,
-          error: "AGENTS.md was modified externally; conflict detected",
+          error: `${fileName} was modified externally; conflict detected`,
         };
       }
     }
@@ -341,13 +352,13 @@ export function saveAgents(
 
     if (fs.existsSync(agentsPath)) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      backupPath = path.join(backupDir, `AGENTS.md.${timestamp}.bak`);
+      backupPath = path.join(backupDir, `${fileName}.${timestamp}.bak`);
 
       const existingContent = fs.readFileSync(agentsPath, "utf-8");
       fs.writeFileSync(backupPath, existingContent);
     }
 
-    const tempPath = path.join(resolvedDir, `.AGENTS.md.tmp.${Date.now()}`);
+    const tempPath = path.join(resolvedDir, `.${fileName}.tmp.${Date.now()}`);
     fs.writeFileSync(tempPath, content);
     fs.renameSync(tempPath, agentsPath);
 

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import type { editor } from "monaco-editor";
 import { DiffEditor, type Monaco } from "@monaco-editor/react";
 import { getAgents, saveAgents, aggregateSessions, proposeAgents } from "../api/client.js";
-import type { ConversationReview, AggregatedInsights } from "../../shared/types.js";
+import type { ConversationReview, AggregatedInsights, AgentType } from "../../shared/types.js";
 
 // IntelliJ "Darcula" palette for the Monaco diff editor.
 function defineDarcula(monaco: Monaco) {
@@ -38,6 +38,7 @@ function defineDarcula(monaco: Monaco) {
 
 interface EditStepProps {
   projectDir: string;
+  agent: AgentType;
   reviews: ConversationReview[];
   insights?: AggregatedInsights | null;
 }
@@ -54,7 +55,10 @@ interface ConflictWarning {
   proposedMtime?: number;
 }
 
-export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
+export function EditStep({ projectDir, agent, reviews, insights }: EditStepProps) {
+  // The conventions file differs per agent: pi uses AGENTS.md, Claude Code
+  // uses CLAUDE.md. Used for all user-facing copy and persisted to the server.
+  const fileLabel = agent === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
   const [currentContent, setCurrentContent] = useState<string>("");
   const [editedContent, setEditedContent] = useState<string>("");
   const [currentMtime, setCurrentMtime] = useState<number | null>(null);
@@ -81,15 +85,15 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
         setIsLoading(true);
         setLoadError(null);
 
-        setLoadingStage("Loading current AGENTS.md...");
-        const agentsResponse = await getAgents(projectDir);
+        setLoadingStage(`Loading current ${fileLabel}...`);
+        const agentsResponse = await getAgents(projectDir, agent);
         const content = agentsResponse.content || "";
         const mtime = agentsResponse.mtime || null;
 
         setLoadingStage("Collecting findings from reviews...");
         const aggregateResponse = await aggregateSessions(reviews);
 
-        setLoadingStage("Generating proposed AGENTS.md... (this can take 1-2 minutes)");
+        setLoadingStage(`Generating proposed ${fileLabel}... (this can take 1-2 minutes)`);
         const proposeResponse = await proposeAgents(
           aggregateResponse.aggregated,
           content,
@@ -127,7 +131,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
     if (!editedContent.trim()) {
       setSaveResult({
         success: false,
-        error: "Cannot save empty AGENTS.md",
+        error: `Cannot save empty ${fileLabel}`,
       });
       return;
     }
@@ -137,7 +141,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
       setSaveResult(null);
       setConflictWarning(null);
 
-      const response = await saveAgents(projectDir, editedContent, currentMtime || undefined);
+      const response = await saveAgents(projectDir, editedContent, currentMtime || undefined, agent);
 
       if (response.success) {
         setSaveResult({
@@ -159,7 +163,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
         } else {
           setSaveResult({
             success: false,
-            error: response.error || "Failed to save AGENTS.md",
+            error: response.error || `Failed to save ${fileLabel}`,
           });
         }
       }
@@ -178,7 +182,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
     // Reload the current AGENTS.md to reconcile
     try {
       setIsLoading(true);
-      const response = await getAgents(projectDir);
+      const response = await getAgents(projectDir, agent);
       const content = response.content || "";
       const mtime = response.mtime || null;
 
@@ -218,7 +222,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
     return (
       <div className="edit-step">
         <div className="error-box">
-          <h3>Error Loading AGENTS.md</h3>
+          <h3>Error Loading {fileLabel}</h3>
           <p>{loadError}</p>
         </div>
       </div>
@@ -229,11 +233,11 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
     <div className="edit-step">
       <div className="edit-header">
         <div className="edit-header-text">
-          <h2>Propose &amp; Save AGENTS.md</h2>
+          <h2>Propose &amp; Save {fileLabel}</h2>
           <p>
-            A proposed AGENTS.md was generated from your reviews. The left side shows the current
-            AGENTS.md (read-only); the right side is your editable proposal. Make any changes before
-            saving.
+            A proposed {fileLabel} was generated from your reviews. The left side shows the current
+            {" "}{fileLabel} (read-only); the right side is your editable proposal. Make any changes
+            before saving.
           </p>
         </div>
         <div className="edit-header-actions">
@@ -242,12 +246,12 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
             onClick={handleSave}
             disabled={isSaving || !editedContent.trim()}
           >
-            {isSaving ? "Saving..." : "Save AGENTS.md"}
+            {isSaving ? "Saving..." : `Save ${fileLabel}`}
           </button>
           <p className="save-info">
             {currentContent
-              ? "A backup of the current AGENTS.md is created before saving."
-              : "This will create a new AGENTS.md for the first time."}
+              ? `A backup of the current ${fileLabel} is created before saving.`
+              : `This will create a new ${fileLabel} for the first time.`}
           </p>
         </div>
       </div>
@@ -297,7 +301,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
           {saveResult.success ? (
             <>
               <h3>✓ Save Successful</h3>
-              <p>AGENTS.md has been saved successfully.</p>
+              <p>{fileLabel} has been saved successfully.</p>
               {saveResult.backupPath && (
                 <p className="backup-info">
                   Backup created at: <code>{saveResult.backupPath}</code>
@@ -317,7 +321,7 @@ export function EditStep({ projectDir, reviews, insights }: EditStepProps) {
         <div className="conflict-box">
           <h3>⚠ Conflict Warning</h3>
           <p>
-            The AGENTS.md file has been modified since you started editing. This is likely because
+            The {fileLabel} file has been modified since you started editing. This is likely because
             another process or session modified it.
           </p>
           <p className="conflict-details">{conflictWarning.message}</p>

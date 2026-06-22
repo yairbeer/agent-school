@@ -3,7 +3,14 @@
  */
 
 /**
- * Summary of a pi session file
+ * Which coding agent produced the sessions being mined. Determines where
+ * sessions live on disk, how their transcripts are parsed, and which
+ * conventions file (AGENTS.md vs CLAUDE.md) the proposal targets.
+ */
+export type AgentType = "pi" | "claude-code";
+
+/**
+ * Summary of a session file
  */
 export interface SessionSummary {
   id: string; // unique session identifier
