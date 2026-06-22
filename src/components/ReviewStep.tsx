@@ -4,13 +4,14 @@
  */
 
 import { useState } from "react";
-import type { SessionSummary, ConversationReview, UserFix, SelfCorrection, LessonLearned } from "../../shared/types.js";
+import type { SessionSummary, ConversationReview, UserFix, SelfCorrection, LessonLearned, AgentType } from "../../shared/types.js";
 import { reviewSession } from "../api/client.js";
 import "./ReviewStep.css";
 
 interface ReviewStepProps {
   sessions: SessionSummary[];
   projectDir: string;
+  agent: AgentType;
   excludeThinking?: boolean;
   onReviewsComplete?: (reviews: ConversationReview[]) => void;
 }
@@ -22,7 +23,7 @@ interface ReviewState {
   error?: string;
 }
 
-export function ReviewStep({ sessions, projectDir, excludeThinking, onReviewsComplete }: ReviewStepProps) {
+export function ReviewStep({ sessions, projectDir, agent, excludeThinking, onReviewsComplete }: ReviewStepProps) {
   const [reviews, setReviews] = useState<Map<string, ConversationReview>>(new Map());
   const [reviewStates, setReviewStates] = useState<Map<string, ReviewState>>(new Map());
   const [forceRefresh, setForceRefresh] = useState(false);
@@ -43,7 +44,7 @@ export function ReviewStep({ sessions, projectDir, excludeThinking, onReviewsCom
 
     for (const session of sessions) {
       try {
-        const response = await reviewSession(session.id, forceRefresh, projectDir, excludeThinking);
+        const response = await reviewSession(session.id, forceRefresh, projectDir, excludeThinking, agent);
         const review = response.review;
 
         newReviews.set(session.id, review);

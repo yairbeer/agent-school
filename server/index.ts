@@ -22,14 +22,21 @@ import type {
   AggregateInsightsResponse,
 } from "../shared/api.js";
 import {
-  resolveSessionsDirectory,
-  listSessionsInDirectory,
-  loadSessionFile,
+  listSessionsForAgent,
+  loadSessionFileForAgent,
+  parseAgentType,
 } from "./sessionLoader.js";
 import {
   aggregateLessons,
 } from "./aggregator.js";
 import { aggregateInsights } from "./insightsAggregator.js";
+import {
+  isDemoDir,
+  isDemoProject,
+  getDemoReview,
+  getDemoInsights,
+  getDemoProposal,
+} from "./demoFixtures.js";
 import {
   AgentsGenerator,
   readCurrentAgents,
@@ -221,8 +228,8 @@ app.get("/api/sessions", (req: Request, res: Response<ListSessionsResponse | Api
   }
 
   try {
-    const sessionsDirPath = resolveSessionsDirectory(dir);
-    const { sessions, warnings } = listSessionsInDirectory(sessionsDirPath);
+    const agent = parseAgentType(req.query.agent);
+    const { sessions, warnings } = listSessionsForAgent(dir, agent);
 
     return res.json({
       sessions,
@@ -261,8 +268,8 @@ app.get("/api/sessions/:id", (req: Request, res: Response<GetSessionResponse | A
       });
     }
 
-    const sessionsDirPath = resolveSessionsDirectory(dir);
-    const { sessions } = listSessionsInDirectory(sessionsDirPath);
+    const agent = parseAgentType(req.query.agent);
+    const { sessions } = listSessionsForAgent(dir, agent);
 
     const sessionSummary = sessions.find((s) => s.id === id);
 
@@ -273,7 +280,7 @@ app.get("/api/sessions/:id", (req: Request, res: Response<GetSessionResponse | A
       });
     }
 
-    const parsedSession = loadSessionFile(sessionSummary.filePath);
+    const parsedSession = loadSessionFileForAgent(sessionSummary.filePath, agent);
 
     if (!parsedSession) {
       return res.status(500).json({
@@ -312,10 +319,10 @@ app.post(
 
       // Get the directory from query param or use default
       const dir = (req.query.dir as string | undefined) || process.cwd();
+      const agent = parseAgentType(req.query.agent);
 
       // Try to get the session and its active branch
-      const sessionsDirPath = resolveSessionsDirectory(dir);
-      const { sessions } = listSessionsInDirectory(sessionsDirPath);
+      const { sessions } = listSessionsForAgent(dir, agent);
 
       const sessionSummary = sessions.find((s) => s.id === sessionId);
       if (!sessionSummary) {
@@ -325,12 +332,23 @@ app.post(
         });
       }
 
-      const parsedSession = loadSessionFile(sessionSummary.filePath);
+      const parsedSession = loadSessionFileForAgent(sessionSummary.filePath, agent);
       if (!parsedSession || !parsedSession.branches || parsedSession.branches.length === 0) {
         return res.status(400).json({
           error: "Failed to load session or no branches found",
           code: "INVALID_SESSION",
         });
+      }
+
+      // Demo mode: return a bundled mock review so the full pipeline works
+      // offline (no LLM/credentials required).
+      if (isDemoDir(dir)) {
+        const demoReview = getDemoReview(sessionSummary.filePath, sessionId);
+        if (demoReview) {
+          const result = { review: demoReview, cached: true };
+          reviewCache.set(sessionId, result);
+          return res.json(result);
+        }
       }
 
       // Use the first branch (leaf/active branch)
@@ -438,6 +456,15 @@ app.post(
         });
       }
 
+      // Demo mode: derive recurring issues from bundled fixtures (no LLM).
+      if (isDemoProject(projectId)) {
+        const insights = getDemoInsights(reviews, projectId || "__demo__");
+        console.log(
+          `[insights] demo fixtures (${insights.repeatingIssues.length} recurring issues)`
+        );
+        return res.json({ insights });
+      }
+
       const t0 = Date.now();
       console.log(`[insights] start: reviews=${reviews.length}`);
       const llm = await getInsightsLLM();
@@ -471,7 +498,7 @@ app.post(
   "/api/agents/propose",
   async (req: Request, res: Response<ProposeAgentsResponse | ApiError>) => {
     try {
-      const { aggregatedLessons, currentAgentsContent, insights } =
+      const { aggregatedLessons, currentAgentsContent, insights, demo } =
         req.body as ProposeAgentsRequest;
 
       if (!aggregatedLessons) {
@@ -479,6 +506,14 @@ app.post(
           error: "aggregatedLessons is required",
           code: "MISSING_AGGREGATED_LESSONS",
         });
+      }
+
+      // Demo mode: return a bundled mock proposal so the demo proposes a real
+      // before/after diff offline (no LLM/credentials required).
+      if (demo) {
+        const proposal = getDemoProposal(currentAgentsContent || "");
+        console.log(`[propose] demo fixtures (output ${proposal.after.length} chars)`);
+        return res.json({ proposal });
       }
 
       // Generate proposal using the meta LLM (lazily initialized)
@@ -529,8 +564,8 @@ app.get("/api/agents", (req: Request, res: Response<GetAgentsResponse | ApiError
       });
     }
 
-    const content = readCurrentAgents(dir);
-    const mtime = getAgentsMtime(dir);
+    const content = readCurrentAgents(dir, parseAgentType(req.query.agent));
+    const mtime = getAgentsMtime(dir, parseAgentType(req.query.agent));
 
     return res.json({
       content: content || undefined,
@@ -554,7 +589,7 @@ app.post(
   "/api/agents/save",
   (req: Request, res: Response<SaveAgentsResponse | ApiError>) => {
     try {
-      const { dir, content, expectedMtime } = req.body as SaveAgentsRequest;
+      const { dir, content, expectedMtime, agent } = req.body as SaveAgentsRequest;
 
       if (!dir || !content) {
         return res.status(400).json({
@@ -563,7 +598,7 @@ app.post(
         });
       }
 
-      const result = saveAgentsFile(dir, content, expectedMtime);
+      const result = saveAgentsFile(dir, content, expectedMtime, parseAgentType(agent));
 
       if (!result.success) {
         return res.status(409).json({

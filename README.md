@@ -52,6 +52,7 @@ cd ai_lessons
 npm install
 
 # configure an LLM provider (see Configuration below)
+# (optional if you only want to run the bundled demo, which is fully mocked)
 cp .env.example .env   # then edit .env
 
 # run the dev server (Vite + React on :5173, API on :3001)
@@ -59,9 +60,11 @@ npm run dev
 ```
 
 Then open http://localhost:5173 and click **“Try the demo”** on the first
-screen — no pi sessions of your own required. The demo loads two bundled
-example sessions and a sample `AGENTS.md` so you can walk the full
-Pick → Preview → Review → Aggregate → Propose flow end to end.
+screen — no pi sessions of your own required, **and no LLM provider needed**.
+The demo loads bundled example sessions and a sample `AGENTS.md`, and the
+Review / Aggregate / Propose steps are served from bundled mock fixtures, so
+you can walk the full Pick → Preview → Review → Aggregate → Propose flow end
+to end completely offline.
 
 **Stack:** TypeScript on Node.js · Vite + React front-end · Monaco diff editor ·
 LangChain.js LLM client (multi-provider) · npm.

@@ -26,6 +26,7 @@ import type {
   AggregatedLessons,
   AggregatedInsights,
   ConversationReview,
+  AgentType,
 } from "../../shared/types.js";
 
 // Use the current page origin in the browser so requests go through the Vite
@@ -95,10 +96,15 @@ export async function checkHealth(): Promise<HealthResponse> {
 /**
  * List all sessions for a project directory
  * @param dir - pi-encoded path (--path-to-project--) or direct path
+ * @param agent - which agent produced the sessions ("pi" | "claude-code")
  */
-export async function listSessions(dir: string): Promise<SessionSummary[]> {
+export async function listSessions(
+  dir: string,
+  agent: AgentType = "pi"
+): Promise<SessionSummary[]> {
   const url = new URL(`${API_BASE}/api/sessions`);
   url.searchParams.set("dir", dir);
+  url.searchParams.set("agent", agent);
 
   const res = await fetch(url.toString());
   if (!res.ok) {
@@ -118,10 +124,16 @@ export async function listSessions(dir: string): Promise<SessionSummary[]> {
  * Load and parse a single session
  * @param id - session identifier (from SessionSummary)
  * @param dir - project directory for session lookup
+ * @param agent - which agent produced the session
  */
-export async function loadSession(id: string, dir: string): Promise<GetSessionResponse> {
+export async function loadSession(
+  id: string,
+  dir: string,
+  agent: AgentType = "pi"
+): Promise<GetSessionResponse> {
   const url = new URL(`${API_BASE}/api/sessions/${id}`);
   url.searchParams.set("dir", dir);
+  url.searchParams.set("agent", agent);
 
   const res = await fetch(url.toString());
   if (!res.ok) {
@@ -140,9 +152,12 @@ export class SessionApiClient {
   /**
    * List sessions for a directory with error handling
    */
-  static async listSessions(dir: string): Promise<{ sessions: SessionSummary[]; error?: string }> {
+  static async listSessions(
+    dir: string,
+    agent: AgentType = "pi"
+  ): Promise<{ sessions: SessionSummary[]; error?: string }> {
     try {
-      const sessions = await listSessions(dir);
+      const sessions = await listSessions(dir, agent);
       return { sessions };
     } catch (err) {
       const error = err instanceof Error ? err.message : "Unknown error";
@@ -155,10 +170,11 @@ export class SessionApiClient {
    */
   static async loadSession(
     id: string,
-    dir: string
+    dir: string,
+    agent: AgentType = "pi"
   ): Promise<{ data?: GetSessionResponse; error?: string }> {
     try {
-      const data = await loadSession(id, dir);
+      const data = await loadSession(id, dir, agent);
       return { data };
     } catch (err) {
       const error = err instanceof Error ? err.message : "Unknown error";
@@ -177,12 +193,14 @@ export async function reviewSession(
   sessionId: string,
   forceRefresh?: boolean,
   dir?: string,
-  excludeThinking?: boolean
+  excludeThinking?: boolean,
+  agent: AgentType = "pi"
 ): Promise<ReviewResponse> {
   const url = new URL(`${API_BASE}/api/review`);
   if (dir) {
     url.searchParams.set("dir", dir);
   }
+  url.searchParams.set("agent", agent);
 
   const res = await fetch(url.toString(), {
     method: "POST",
@@ -241,10 +259,12 @@ export async function aggregateSessions(
 /**
  * Get current AGENTS.md file
  * @param dir - project directory
+ * @param agent - which agent's conventions file to read (AGENTS.md vs CLAUDE.md)
  */
-export async function getAgents(dir: string): Promise<GetAgentsResponse> {
+export async function getAgents(dir: string, agent: AgentType = "pi"): Promise<GetAgentsResponse> {
   const url = new URL(`${API_BASE}/api/agents`);
   url.searchParams.set("dir", dir);
+  url.searchParams.set("agent", agent);
 
   const res = await fetch(url.toString());
   if (!res.ok) {
@@ -264,14 +284,15 @@ export async function getAgents(dir: string): Promise<GetAgentsResponse> {
  */
 export async function aggregateInsights(
   reviews: ConversationReview[],
-  projectId?: string
+  projectId?: string,
+  demo?: boolean
 ): Promise<AggregateInsightsResponse> {
   const url = new URL(`${API_BASE}/api/insights`);
 
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reviews, projectId } as AggregateInsightsRequest),
+    body: JSON.stringify({ reviews, projectId, demo } as AggregateInsightsRequest),
   });
 
   return readJson<AggregateInsightsResponse>(res, "INSIGHTS_FAILED");
@@ -286,7 +307,8 @@ export async function aggregateInsights(
 export async function proposeAgents(
   aggregatedLessons: AggregatedLessons,
   currentAgentsContent?: string,
-  insights?: AggregatedInsights
+  insights?: AggregatedInsights,
+  demo?: boolean
 ): Promise<ProposeAgentsResponse> {
   const url = new URL(`${API_BASE}/api/agents/propose`);
 
@@ -297,6 +319,7 @@ export async function proposeAgents(
       aggregatedLessons,
       insights,
       currentAgentsContent,
+      demo,
     } as ProposeAgentsRequest),
   });
 
@@ -312,7 +335,8 @@ export async function proposeAgents(
 export async function saveAgents(
   dir: string,
   content: string,
-  expectedMtime?: number
+  expectedMtime?: number,
+  agent: AgentType = "pi"
 ): Promise<SaveAgentsResponse> {
   const url = new URL(`${API_BASE}/api/agents/save`);
 
@@ -323,6 +347,7 @@ export async function saveAgents(
       dir,
       content,
       expectedMtime,
+      agent,
     } as SaveAgentsRequest),
   });
 

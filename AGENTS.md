@@ -7,6 +7,10 @@ preview them, uses an LLM to review each conversation and extract **structured
 lessons learned**, and then proposes an improved `AGENTS.md`. It closes the loop:
 raw agent transcripts → structured insights → better instructions next time.
 
+Sessions can come from **pi** (`~/.pi/agent/sessions`, AGENTS.md) or **Claude
+Code** (`~/.claude/projects`, CLAUDE.md). The agent is selectable in step 1
+(Pick); the rest of the pipeline is agent-agnostic.
+
 - **Frontend:** Vite + React + TypeScript, Monaco diff editor.
 - **Backend:** Express (TypeScript, ESM) run via `tsx`.
 - **LLM:** LangChain.js, multi-provider (`server/llmFactory.ts`).
@@ -60,7 +64,10 @@ sessions (no real pi sessions required).
 server/                 Express API (ESM, tsx)
   index.ts              endpoints + startup; loads dotenv; builds ReviewEngine/AgentsGenerator
   sessionLoader.ts      discover/parse pi JSONL sessions; path <-> --path-- encoding;
-                        __demo__ sentinel -> <repo>/demo; resolveProjectDir/resolveSessionsDirectory
+                        __demo__ sentinel -> <repo>/demo; resolveProjectDir/resolveSessionsDirectory;
+                        agent-aware dispatchers (*ForAgent + parseAgentType)
+  claudeCodeLoader.ts   discover/parse Claude Code JSONL sessions (~/.claude/projects/<encoded>);
+                        maps Claude entries to the same SessionSummary/RenderableEntry shapes
   reviewEngine.ts       per-session LLM review (structured JSON/tool output); transcript builder
   insightsAggregator.ts LLM-cluster reviews into recurring issues (the Aggregate step)
   aggregator.ts         combine reviews into AggregatedLessons
@@ -92,6 +99,14 @@ Propose & Save step (`EditStep`) and are prioritized in the proposal prompt.
 - The UI never renders absolute `filePath`/`cwd` (avoids leaking the runner's paths).
 
 ## Domain Rules (important, learned the hard way)
+
+- **Multi-agent is a discriminator, not a fork.** Endpoints take an `agent`
+  param (`pi` | `claude-code`, default `pi`); `sessionLoader.ts` dispatches to
+  the right loader and the rest of the pipeline stays agent-agnostic. Claude
+  Code's path encoding is **lossy** (every non-alphanumeric char → `-`), so
+  never decode it — read `cwd` from inside the session file instead. The
+  conventions file follows the agent: AGENTS.md for pi, CLAUDE.md for Claude
+  Code (`agentsFileName`).
 
 - **Review output is structured JSON** (tool/schema, enforced + validated).
   **Propose output is plain markdown** — not structured. Don't "fix" the propose
@@ -126,6 +141,12 @@ Propose & Save step (`EditStep`) and are prioritized in the proposal prompt.
 
 - Project sentinel `__demo__` resolves to `<repo>/demo` (`resolveProjectDir`),
   with sessions in `demo/sessions/*.jsonl` and a sample `demo/AGENTS.md`.
+- **The demo runs the full pipeline offline with NO LLM.** Review, Aggregate
+  (insights) and Propose are served from bundled mock fixtures
+  (`server/demoFixtures.ts`), gated by the `__demo__` dir / `demo` request flag.
+  Reviews are keyed by session file basename (the frontend id is a path hash);
+  insights are derived deterministically from the supplied reviews. Don't route
+  the demo through the real LLM.
 - Demo content is fully synthetic/generic — keep it that way (no real names,
   hosts, keys, customer IDs, or personal paths).
 

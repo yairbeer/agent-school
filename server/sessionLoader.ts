@@ -21,7 +21,14 @@ import type {
   RenderableEntry,
   ConversationBranch,
   ParsedSession,
+  AgentType,
 } from "../shared/types.js";
+
+import {
+  resolveClaudeSessionsDirectory,
+  listClaudeSessionsInDirectory,
+  loadClaudeSessionFile,
+} from "./claudeCodeLoader.js";
 
 /**
  * FR-1: Path encoder/decoder for pi's --path-- scheme
@@ -627,4 +634,50 @@ export function loadSessionFile(filePath: string): ParsedSession | null {
     branches: [branch],
     warnings,
   };
+}
+
+/**
+ * Agent-aware dispatchers
+ *
+ * The endpoints accept an `agent` discriminator ("pi" | "claude-code") and use
+ * these wrappers so the rest of the app (review/aggregate/propose) stays
+ * agent-agnostic. "pi" is the default to preserve existing behavior.
+ */
+
+/** Resolve the on-disk sessions directory for the given agent. */
+export function resolveSessionsDirectoryFor(
+  dir: string,
+  agent: AgentType = "pi"
+): string {
+  if (agent === "claude-code") {
+    return resolveClaudeSessionsDirectory(dir);
+  }
+  return resolveSessionsDirectory(dir);
+}
+
+/** List sessions for a project directory using the given agent's format. */
+export function listSessionsForAgent(
+  dir: string,
+  agent: AgentType = "pi"
+): { sessions: SessionSummary[]; warnings: string[] } {
+  if (agent === "claude-code") {
+    return listClaudeSessionsInDirectory(resolveClaudeSessionsDirectory(dir));
+  }
+  return listSessionsInDirectory(resolveSessionsDirectory(dir));
+}
+
+/** Load a single session file using the given agent's parser. */
+export function loadSessionFileForAgent(
+  filePath: string,
+  agent: AgentType = "pi"
+): ParsedSession | null {
+  if (agent === "claude-code") {
+    return loadClaudeSessionFile(filePath);
+  }
+  return loadSessionFile(filePath);
+}
+
+/** Normalize an incoming agent query/body value to a valid AgentType. */
+export function parseAgentType(value: unknown): AgentType {
+  return value === "claude-code" ? "claude-code" : "pi";
 }

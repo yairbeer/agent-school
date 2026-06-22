@@ -5,15 +5,16 @@
 import { useState, FormEvent } from "react";
 import { SessionApiClient } from "../api/client.js";
 import { BrowseDirectoryModal } from "./BrowseDirectoryModal.js";
-import type { SessionSummary } from "../../shared/types.js";
+import type { SessionSummary, AgentType } from "../../shared/types.js";
 
 interface ProjectPickerProps {
-  onProjectSelected: (dir: string, sessions: SessionSummary[]) => void;
+  onProjectSelected: (dir: string, agent: AgentType, sessions: SessionSummary[]) => void;
   isLoading?: boolean;
 }
 
 export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectPickerProps) {
   const [dir, setDir] = useState("");
+  const [agent, setAgent] = useState<AgentType>("pi");
   const [error, setError] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [showSessions, setShowSessions] = useState(false);
@@ -34,7 +35,8 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
     setLoading(true);
     try {
       const { sessions: loadedSessions, error: apiError } = await SessionApiClient.listSessions(
-        dir
+        dir,
+        agent
       );
 
       if (apiError) {
@@ -54,7 +56,7 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
 
   const handleConfirm = () => {
     if (sessions.length > 0) {
-      onProjectSelected(dir, sessions);
+      onProjectSelected(dir, agent, sessions);
     }
   };
 
@@ -71,12 +73,13 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
     setLoading(true);
     try {
       const { sessions: loadedSessions, error: apiError } =
-        await SessionApiClient.listSessions("__demo__");
+        await SessionApiClient.listSessions("__demo__", "pi");
       if (apiError) {
         setError(apiError);
         setSessions([]);
       } else {
         setDir("__demo__");
+        setAgent("pi");
         setSessions(loadedSessions);
         setShowSessions(true);
       }
@@ -89,21 +92,38 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
     <div className="project-picker">
       <h2>Pick Project</h2>
       <p className="instructions">
-        Enter a project directory to discover pi sessions. Pi will search for a sessions folder
-        using the project path.
+        Enter a project directory to discover agent sessions. Choose which coding agent produced
+        them — pi or Claude Code — then search.
         {" "}
         <button
           type="button"
           className="demo-link"
           onClick={handleLoadDemo}
           disabled={loading || isLoading}
-          title="Load bundled example sessions — no pi sessions of your own required"
+          title="Load bundled example sessions — no sessions of your own required"
         >
           Just exploring? Try the demo →
         </button>
       </p>
 
       <form onSubmit={handleSubmit} className="picker-form">
+        <div className="form-group">
+          <label htmlFor="agent-select">Coding Agent</label>
+          <select
+            id="agent-select"
+            className="input"
+            value={agent}
+            onChange={(e) => setAgent(e.target.value as AgentType)}
+            disabled={loading || isLoading}
+          >
+            <option value="pi">pi (~/.pi/agent/sessions)</option>
+            <option value="claude-code">Claude Code (~/.claude/projects)</option>
+          </select>
+          <small className="hint">
+            Determines where sessions are read from and whether the proposal targets AGENTS.md (pi)
+            or CLAUDE.md (Claude Code).
+          </small>
+        </div>
         <div className="form-group">
           <label htmlFor="dir-input">Project Directory Path</label>
           <div className="input-with-button">

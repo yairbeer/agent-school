@@ -105,25 +105,26 @@ describe("EditStep", () => {
     it("should aggregate, propose, and load current AGENTS.md on mount", async () => {
       vi.mocked(client.getAgents).mockResolvedValue({ content: mockCurrentContent, mtime: mockMtime });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByText("Propose & Save AGENTS.md")).toBeInTheDocument();
       });
 
-      expect(client.getAgents).toHaveBeenCalledWith(mockProjectDir);
+      expect(client.getAgents).toHaveBeenCalledWith(mockProjectDir, "pi");
       expect(client.aggregateSessions).toHaveBeenCalledWith(mockReviews);
       expect(client.proposeAgents).toHaveBeenCalledWith(
         expect.anything(),
         mockCurrentContent,
-        undefined
+        undefined,
+        false
       );
     });
 
     it("should handle empty current AGENTS.md gracefully", async () => {
       vi.mocked(client.getAgents).mockResolvedValue({ content: undefined, mtime: undefined });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByText("Propose & Save AGENTS.md")).toBeInTheDocument();
@@ -138,7 +139,7 @@ describe("EditStep", () => {
       const errorMessage = "Network error";
       vi.mocked(client.getAgents).mockRejectedValue(new Error(errorMessage));
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByText("Error Loading AGENTS.md")).toBeInTheDocument();
@@ -149,7 +150,7 @@ describe("EditStep", () => {
     it("should display the diff editor with current and proposed content", async () => {
       vi.mocked(client.getAgents).mockResolvedValue({ content: mockCurrentContent, mtime: mockMtime });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByTestId("mock-diff-editor")).toBeInTheDocument();
@@ -164,7 +165,7 @@ describe("EditStep", () => {
     it("lets the user review the system prompt and user message", async () => {
       vi.mocked(client.getAgents).mockResolvedValue({ content: mockCurrentContent, mtime: mockMtime });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByText(/Review the prompt sent to the model/)).toBeInTheDocument();
@@ -181,7 +182,7 @@ describe("EditStep", () => {
     it("should allow editing the modified editor", async () => {
       vi.mocked(client.getAgents).mockResolvedValue({ content: mockCurrentContent, mtime: mockMtime });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByTestId("modified-editor")).toBeInTheDocument();
@@ -197,7 +198,7 @@ describe("EditStep", () => {
       setupProposal("");
       vi.mocked(client.getAgents).mockResolvedValue({ content: mockCurrentContent, mtime: mockMtime });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         const saveButton = screen.getByRole("button", { name: /Save AGENTS.md/ });
@@ -208,7 +209,7 @@ describe("EditStep", () => {
     it("should enable save button when content is not empty", async () => {
       vi.mocked(client.getAgents).mockResolvedValue({ content: mockCurrentContent, mtime: mockMtime });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         const saveButton = screen.getByRole("button", { name: /Save AGENTS.md/ });
@@ -223,7 +224,7 @@ describe("EditStep", () => {
       const backupPath = ".agents_backups/AGENTS.md.2026-06-15T12:00:00Z.bak";
       vi.mocked(client.saveAgents).mockResolvedValue({ success: true, mtime: 1234567900, backupPath });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /Save AGENTS.md/ })).toBeInTheDocument();
@@ -236,7 +237,7 @@ describe("EditStep", () => {
         expect(screen.getByText(new RegExp(backupPath))).toBeInTheDocument();
       });
 
-      expect(client.saveAgents).toHaveBeenCalledWith(mockProjectDir, mockProposedContent, mockMtime);
+      expect(client.saveAgents).toHaveBeenCalledWith(mockProjectDir, mockProposedContent, mockMtime, "pi");
     });
   });
 
@@ -246,7 +247,7 @@ describe("EditStep", () => {
       const conflictError = "AGENTS.md was modified externally; conflict detected";
       vi.mocked(client.saveAgents).mockResolvedValue({ success: false, error: conflictError, mtime: 1234567950 });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /Save AGENTS.md/ })).toBeInTheDocument();
@@ -267,7 +268,7 @@ describe("EditStep", () => {
         .mockResolvedValueOnce({ success: false, error: "conflict detected", mtime: 1234567950 })
         .mockResolvedValueOnce({ success: true, mtime: 1234567960, backupPath: ".bak" });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /Save AGENTS.md/ })).toBeInTheDocument();
@@ -291,7 +292,7 @@ describe("EditStep", () => {
       const errorMessage = "Permission denied";
       vi.mocked(client.saveAgents).mockResolvedValue({ success: false, error: errorMessage });
 
-      render(<EditStep projectDir={mockProjectDir} reviews={mockReviews} />);
+      render(<EditStep projectDir={mockProjectDir} agent="pi" reviews={mockReviews} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /Save AGENTS.md/ })).toBeInTheDocument();
