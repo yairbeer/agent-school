@@ -26,7 +26,7 @@ body {
 .app {
   height: 100vh;
   overflow: hidden;
-  padding: 2rem;
+  padding: 1rem 1.5rem;
   background-color: var(--bg-darker);
 }
 
@@ -93,8 +93,8 @@ body {
 /* Wizard */
 .wizard {
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  gap: 2rem;
+  grid-template-rows: auto auto 1fr;
+  gap: 1rem;
   max-width: 1200px;
   margin: 0 auto;
   height: 100%;
@@ -102,28 +102,48 @@ body {
 }
 
 .wizard-header {
-  text-align: center;
-  padding-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border-color);
 }
 
+.wizard-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .wizard-header h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 2.5em;
+  margin: 0;
+  font-size: 1.6em;
   color: var(--primary-color);
+  white-space: nowrap;
 }
 
 .wizard-header .subtitle {
   margin: 0;
-  color: var(--text-primary);
-  font-size: 1.1em;
+  color: var(--text-secondary);
+  font-size: 0.95em;
+}
+
+.wizard-nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
 }
 
 .wizard-steps {
   display: flex;
   gap: 1rem;
   overflow-x: auto;
-  padding-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -174,17 +194,9 @@ body {
   background-color: var(--bg-dark);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 2rem;
+  padding: 1.5rem;
   overflow: auto;
   min-height: 0;
-}
-
-.wizard-footer {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
 }
 
 /* Buttons */
@@ -224,6 +236,11 @@ body {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9em;
 }
 
 /* Form elements */

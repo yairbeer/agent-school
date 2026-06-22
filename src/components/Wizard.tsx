@@ -27,10 +27,35 @@ export function Wizard({ children, currentStep, onStepChange }: WizardProps) {
 
   return (
     <div className="wizard">
-      <div className="wizard-header">
-        <h1>AgentSchool</h1>
-        <p className="subtitle">Who says AI can't learn?</p>
-      </div>
+      <header className="wizard-header">
+        <div className="wizard-title">
+          <h1>AgentSchool</h1>
+          <span className="subtitle">Who says AI can't learn?</span>
+        </div>
+
+        <div className="wizard-nav">
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              if (canGoBack) {
+                goToStep(STEPS[stepIndex - 1].step);
+              }
+            }}
+            disabled={!canGoBack}
+          >
+            ← Back
+          </button>
+
+          {canGoForward && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => goToStep(STEPS[stepIndex + 1].step)}
+            >
+              Next →
+            </button>
+          )}
+        </div>
+      </header>
 
       <nav className="wizard-steps">
         {STEPS.map((s, idx) => (
@@ -50,34 +75,6 @@ export function Wizard({ children, currentStep, onStepChange }: WizardProps) {
       </nav>
 
       <div className="wizard-content">{children}</div>
-
-      <div className="wizard-footer">
-        <button
-          className="btn btn-secondary"
-          onClick={() => {
-            if (canGoBack) {
-              goToStep(STEPS[stepIndex - 1].step);
-            }
-          }}
-          disabled={!canGoBack}
-        >
-          ← Back
-        </button>
-
-        {stepIndex < STEPS.length - 1 && (
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              if (canGoForward) {
-                goToStep(STEPS[stepIndex + 1].step);
-              }
-            }}
-            disabled={!canGoForward}
-          >
-            Next →
-          </button>
-        )}
-      </div>
     </div>
   );
 }
