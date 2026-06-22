@@ -998,7 +998,15 @@ body {
   }
 
   .wizard-steps {
-    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .step {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .step-label {
+    font-size: 0.85em;
   }
 
   .list-controls {
