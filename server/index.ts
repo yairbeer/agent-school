@@ -44,17 +44,23 @@ import {
   saveAgents as saveAgentsFile,
 } from "./agentsGenerator.js";
 import { ReviewEngine } from "./reviewEngine.js";
-import { createLLM } from "./llmFactory.js";
+import { createLLM, detectProvider } from "./llmFactory.js";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Default model when neither REVIEW_MODEL nor AGENTS_MODEL is set.
-const DEFAULT_MODEL = "gpt-5.5";
+// Default model when neither REVIEW_MODEL nor AGENTS_MODEL is set. Defaults to
+// the tested AWS Bedrock Claude model; `detectProvider` resolves this to the
+// `bedrock` provider, so the app works out-of-the-box against Bedrock (using
+// the standard AWS credential chain) without any env configuration.
+const DEFAULT_MODEL =
+  process.env.DEFAULT_MODEL || "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
 const REVIEW_MODEL = process.env.REVIEW_MODEL || DEFAULT_MODEL;
 const LLM_PROVIDER =
-  process.env.LLM_PROVIDER || process.env.REVIEW_PROVIDER || "(auto-detect)";
+  process.env.LLM_PROVIDER ||
+  process.env.REVIEW_PROVIDER ||
+  `${detectProvider(REVIEW_MODEL)} (auto-detected)`;
 
 // LLM for AGENTS.md generation is created lazily on first use so the server
 // can start (and serve session browsing / previews) without any provider
