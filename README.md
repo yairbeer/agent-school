@@ -21,6 +21,12 @@ better instructions for the next session.
 > will be sent again**. Review what your sessions contain before running, and
 > prefer a local/offline model for sensitive projects.
 
+## Demo
+
+📺 **[Watch the demo video](https://youtu.be/lpgcrzhK8AQ)**
+
+[![AgentSchool demo](https://img.youtube.com/vi/lpgcrzhK8AQ/maxresdefault.jpg)](https://youtu.be/lpgcrzhK8AQ)
+
 ## Features
 
 - **📂 Session discovery** — finds sessions for a project directory from either
