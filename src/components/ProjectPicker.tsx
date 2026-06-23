@@ -21,13 +21,12 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
   const [loading, setLoading] = useState(false);
   const [showBrowseModal, setShowBrowseModal] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const runSearch = async (searchDir: string) => {
     setError(null);
     setSessions([]);
     setShowSessions(false);
 
-    if (!dir.trim()) {
+    if (!searchDir.trim()) {
       setError("Please enter a project directory path");
       return;
     }
@@ -35,7 +34,7 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
     setLoading(true);
     try {
       const { sessions: loadedSessions, error: apiError } = await SessionApiClient.listSessions(
-        dir,
+        searchDir,
         agent
       );
 
@@ -54,6 +53,11 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
     }
   };
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void runSearch(dir);
+  };
+
   const handleConfirm = () => {
     if (sessions.length > 0) {
       onProjectSelected(dir, agent, sessions);
@@ -63,6 +67,7 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
   const handleBrowseSelect = (selectedPath: string) => {
     setDir(selectedPath);
     setShowBrowseModal(false);
+    void runSearch(selectedPath);
   };
 
   // Load the bundled demo sessions so the tool can be tried without any real
@@ -92,8 +97,7 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
     <div className="project-picker">
       <h2>Pick Project</h2>
       <p className="instructions">
-        Enter a project directory to discover agent sessions. Choose which coding agent produced
-        them — pi or Claude Code — then search.
+        Choose Agent Harness and Directory.
         {" "}
         <button
           type="button"
@@ -108,7 +112,7 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
 
       <form onSubmit={handleSubmit} className="picker-form">
         <div className="form-group">
-          <label htmlFor="agent-select">Coding Agent</label>
+          <label htmlFor="agent-select">Agent Harness</label>
           <select
             id="agent-select"
             className="input"
@@ -116,13 +120,9 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
             onChange={(e) => setAgent(e.target.value as AgentType)}
             disabled={loading || isLoading}
           >
-            <option value="pi">pi (~/.pi/agent/sessions)</option>
-            <option value="claude-code">Claude Code (~/.claude/projects)</option>
+            <option value="pi">pi</option>
+            <option value="claude-code">Claude Code</option>
           </select>
-          <small className="hint">
-            Determines where sessions are read from and whether the proposal targets AGENTS.md (pi)
-            or CLAUDE.md (Claude Code).
-          </small>
         </div>
         <div className="form-group">
           <label htmlFor="dir-input">Project Directory Path</label>
@@ -132,7 +132,7 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
               type="text"
               value={dir}
               onChange={(e) => setDir(e.target.value)}
-              placeholder="e.g., /path/to/your/project or --path-to-your-project--"
+              placeholder=""
               disabled={loading || isLoading}
               className="input"
             />
@@ -145,20 +145,9 @@ export function ProjectPicker({ onProjectSelected, isLoading = false }: ProjectP
               Browse...
             </button>
           </div>
-          <small className="hint">
-            Supports both direct paths and pi-encoded paths (--path--encoding--)
-          </small>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
-
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={!dir.trim() || loading || isLoading}
-        >
-          {loading ? "Searching..." : "Search for Sessions"}
-        </button>
       </form>
 
       {showSessions && sessions.length > 0 && (

@@ -10,6 +10,8 @@ interface SessionListProps {
   onSelectChange: (selected: Set<string>) => void;
   excludeThinking?: boolean;
   onExcludeThinkingChange?: (value: boolean) => void;
+  onPreview?: (id: string) => void;
+  previewId?: string | null;
 }
 
 export function SessionList({
@@ -17,6 +19,8 @@ export function SessionList({
   onSelectChange,
   excludeThinking = false,
   onExcludeThinkingChange,
+  onPreview,
+  previewId,
 }: SessionListProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<"name" | "timestamp" | "cost">("timestamp");
@@ -185,9 +189,12 @@ export function SessionList({
               {sorted.map((session) => (
                 <tr
                   key={session.id}
-                  className={`session-row ${selected.has(session.id) ? "selected" : ""}`}
+                  className={`session-row ${selected.has(session.id) ? "selected" : ""} ${
+                    previewId === session.id ? "previewing" : ""
+                  }`}
+                  onClick={() => onPreview?.(session.id)}
                 >
-                  <td className="checkbox-col">
+                  <td className="checkbox-col" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selected.has(session.id)}

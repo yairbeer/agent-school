@@ -220,10 +220,14 @@ export async function reviewSession(
 
   if (!res.ok) {
     const err: ApiError = await res.json();
+    const detail =
+      typeof err.details?.message === "string" && err.details.message
+        ? `: ${err.details.message}`
+        : "";
     throw new ApiError(
       err.code || "REVIEW_FAILED",
       res.status,
-      err.error || "Failed to review session"
+      `${err.error || "Failed to review session"}${detail}`
     );
   }
 

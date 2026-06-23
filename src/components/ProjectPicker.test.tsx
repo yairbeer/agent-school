@@ -23,25 +23,7 @@ describe("ProjectPicker", () => {
     render(<ProjectPicker onProjectSelected={mockOnProjectSelected} />);
 
     expect(screen.getByRole("textbox")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Search for Sessions/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Browse/i })).toBeInTheDocument();
-  });
-
-  it("has disabled submit button when input is empty", () => {
-    render(<ProjectPicker onProjectSelected={mockOnProjectSelected} />);
-
-    const button = screen.getByText(/Search for Sessions/i);
-    expect(button).toBeDisabled();
-  });
-
-  it("enables submit button when input has value", () => {
-    render(<ProjectPicker onProjectSelected={mockOnProjectSelected} />);
-
-    const input = screen.getByDisplayValue("") as HTMLInputElement;
-    const button = screen.getByText(/Search for Sessions/i);
-
-    fireEvent.change(input, { target: { value: "/some/path" } });
-    expect(button).not.toBeDisabled();
   });
 
   it("shows privacy banner with warning", () => {
@@ -51,14 +33,11 @@ describe("ProjectPicker", () => {
     expect(screen.getByText(/Sessions may contain sensitive information/i)).toBeInTheDocument();
   });
 
-  it("uses generic path example in placeholder (not personal paths)", () => {
+  it("leaves the directory placeholder empty (users browse for a path)", () => {
     render(<ProjectPicker onProjectSelected={mockOnProjectSelected} />);
 
     const input = screen.getByRole("textbox") as HTMLInputElement;
-    expect(input.placeholder).toContain("/path/to/your/project");
-    expect(input.placeholder).toContain("--path-to-your-project--");
-    expect(input.placeholder).not.toContain("/Users/alice");
-    expect(input.placeholder).not.toContain("--Users-alice");
+    expect(input.placeholder).toBe("");
   });
 
   it("renders Browse button", () => {
@@ -112,7 +91,7 @@ describe("ProjectPicker", () => {
     });
   });
 
-  it("fills input when directory is selected from browser", async () => {
+  it("fills input and searches when a directory is selected from browser", async () => {
     const mockBrowseDirectory = vi.mocked(apiClient.browseDirectory);
     mockBrowseDirectory.mockResolvedValue({
       path: "/home/user",
@@ -121,6 +100,8 @@ describe("ProjectPicker", () => {
         { name: "projects", path: "/home/user/projects" },
       ],
     });
+    const mockListSessions = vi.mocked(apiClient.SessionApiClient.listSessions);
+    mockListSessions.mockResolvedValue({ sessions: [], error: null });
 
     render(<ProjectPicker onProjectSelected={mockOnProjectSelected} />);
 
@@ -138,5 +119,6 @@ describe("ProjectPicker", () => {
       const input = screen.getByRole("textbox") as HTMLInputElement;
       expect(input.value).toBe("/home/user");
     });
+    expect(mockListSessions).toHaveBeenCalledWith("/home/user", "pi");
   });
 });

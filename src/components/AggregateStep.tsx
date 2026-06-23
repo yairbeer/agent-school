@@ -64,11 +64,6 @@ export function AggregateStep({ reviews, onInsightsReady, demo }: AggregateStepP
     <div className="aggregate-step">
       <div className="aggregate-header">
         <h2>Recurring Issues</h2>
-        <p>
-          The LLM clustered the findings from {reviews.length} reviewed session(s)
-          into the recurring themes below. These are prioritized when proposing
-          your AGENTS.md.
-        </p>
       </div>
 
       {isLoading && (
