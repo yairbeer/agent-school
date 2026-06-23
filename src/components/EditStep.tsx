@@ -235,15 +235,8 @@ export function EditStep({ projectDir, agent, reviews, insights }: EditStepProps
   return (
     <div className="edit-step">
       <div className="edit-header">
-        <div className="edit-header-text">
+        <div className="edit-header-top">
           <h2>Propose &amp; Save {fileLabel}</h2>
-          <p>
-            A proposed {fileLabel} was generated from your reviews. The left side shows the current
-            {" "}{fileLabel} (read-only); the right side is your editable proposal. Make any changes
-            before saving.
-          </p>
-        </div>
-        <div className="edit-header-actions">
           <button
             className="btn btn-primary"
             onClick={handleSave}
@@ -251,12 +244,14 @@ export function EditStep({ projectDir, agent, reviews, insights }: EditStepProps
           >
             {isSaving ? "Saving..." : `Save ${fileLabel}`}
           </button>
-          <p className="save-info">
-            {currentContent
-              ? `A backup of the current ${fileLabel} is created before saving.`
-              : `This will create a new ${fileLabel} for the first time.`}
-          </p>
         </div>
+        <p className="edit-header-desc">
+          The left side shows the current {fileLabel} (read-only); the right side is your
+          editable proposal.
+        </p>
+        {!currentContent && (
+          <p className="save-info">This will create a new {fileLabel} for the first time.</p>
+        )}
       </div>
 
       {promptUsed && (

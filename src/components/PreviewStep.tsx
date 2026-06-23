@@ -63,35 +63,15 @@ export function PreviewStep({
             onSelectChange={onSelectChange}
             excludeThinking={excludeThinking}
             onExcludeThinkingChange={onExcludeThinkingChange}
+            onPreview={setSelectedSessionId}
+            previewId={selectedSessionId}
           />
-
-          <div className="session-browser">
-            <h3>Quick Preview</h3>
-            <p className="hint">Click a session name above to preview its transcript</p>
-
-            <div className="session-quick-select">
-              <label htmlFor="session-select">Or select here:</label>
-              <select
-                id="session-select"
-                value={selectedSessionId || ""}
-                onChange={(e) => setSelectedSessionId(e.target.value || null)}
-                className="input input-select"
-              >
-                <option value="">None selected</option>
-                {sessions.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
         </div>
 
         <div className="preview-right">
           {!selectedSessionId && (
             <div className="preview-placeholder">
-              <p>👈 Select a session to preview its transcript</p>
+              <p>👈 Click a session to preview its transcript</p>
             </div>
           )}
 
